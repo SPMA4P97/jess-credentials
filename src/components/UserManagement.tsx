@@ -1,13 +1,12 @@
+
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { LogOut, Users, FileText, Settings } from 'lucide-react'
-import CredentialForm from './CredentialForm'
-import CredentialsList from './CredentialsList'
+import { LogOut } from 'lucide-react'
+import NavigationTabs from './NavigationTabs'
+import CredentialsTab from './CredentialsTab'
+import UsersTab from './UsersTab'
+import SettingsTab from './SettingsTab'
 import PDFViewer from './PDFViewer'
-import OrganizationManager from './OrganizationManager'
-import RoleManager from './RoleManager'
-import UserTable from './UserTable'
 
 interface User {
   id: string
@@ -95,90 +94,40 @@ export default function UserManagement({
         </div>
 
         {/* Navigation */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex space-x-4">
-            <Button
-              variant={activeTab === 'credentials' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('credentials')}
-              className="flex items-center gap-2"
-            >
-              <FileText size={16} />
-              Credentials
-            </Button>
-            {currentUser.role === 'admin' && (
-              <>
-                <Button
-                  variant={activeTab === 'users' ? 'default' : 'outline'}
-                  onClick={() => setActiveTab('users')}
-                  className="flex items-center gap-2"
-                >
-                  <Users size={16} />
-                  Users
-                </Button>
-                <Button
-                  variant={activeTab === 'settings' ? 'default' : 'outline'}
-                  onClick={() => setActiveTab('settings')}
-                  className="flex items-center gap-2"
-                >
-                  <Settings size={16} />
-                  Settings
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        <NavigationTabs 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isAdmin={currentUser.role === 'admin'}
+        />
 
         {/* Content */}
         <div className="bg-white rounded-lg shadow-md p-6">
           {activeTab === 'credentials' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold mb-4">Manage Credentials</h2>
-              
-              <div className="grid lg:grid-cols-2 gap-6">
-                <CredentialForm 
-                  organizations={organizations}
-                  roles={roles}
-                  onCredentialGenerated={handleCredentialGenerated}
-                />
-                
-                <div>
-                  <CredentialsList 
-                    credentials={credentials}
-                    onDelete={handleDeleteCredential}
-                    onViewPDF={handleViewPDF}
-                  />
-                </div>
-              </div>
-            </div>
+            <CredentialsTab
+              organizations={organizations}
+              roles={roles}
+              credentials={credentials}
+              onCredentialGenerated={handleCredentialGenerated}
+              onDeleteCredential={handleDeleteCredential}
+              onViewPDF={handleViewPDF}
+            />
           )}
 
           {activeTab === 'users' && currentUser.role === 'admin' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">User Management</h2>
-              <UserTable 
-                users={users}
-                setUsers={setUsers}
-                currentUser={currentUser}
-              />
-            </div>
+            <UsersTab
+              users={users}
+              setUsers={setUsers}
+              currentUser={currentUser}
+            />
           )}
 
           {activeTab === 'settings' && currentUser.role === 'admin' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">System Settings</h2>
-              
-              <div className="space-y-6">
-                <OrganizationManager 
-                  organizations={organizations}
-                  setOrganizations={setOrganizations}
-                />
-                
-                <RoleManager 
-                  roles={roles}
-                  setRoles={setRoles}
-                />
-              </div>
-            </div>
+            <SettingsTab
+              organizations={organizations}
+              setOrganizations={setOrganizations}
+              roles={roles}
+              setRoles={setRoles}
+            />
           )}
         </div>
       </div>
