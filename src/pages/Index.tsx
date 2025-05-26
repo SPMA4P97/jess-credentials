@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { format } from 'date-fns'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Edit2, Check, X } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import CredentialForm from '@/components/CredentialForm'
 import CredentialsList from '@/components/CredentialsList'
@@ -176,9 +176,8 @@ function Login({ onLogin, users }) {
       <Card className="max-w-md mx-auto shadow-xl">
         <CardContent className="space-y-6 p-8">
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-blue-800">JESS</h1>
-            <h2 className="text-xl font-semibold text-gray-700">Credentials Portal</h2>
-            <p className="text-gray-600">Journal Editorial Support System</p>
+            <h1 className="text-3xl font-bold text-blue-800">JESS Credentials Portal</h1>
+            <p className="text-gray-600">Journal of Emerging Sport Studies</p>
           </div>
           
           <div className="space-y-4">
@@ -224,6 +223,9 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
   const [newOrganization, setNewOrganization] = useState("")
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set())
   const [showNewPassword, setShowNewPassword] = useState(false)
+  const [editingUser, setEditingUser] = useState<string | null>(null)
+  const [editingField, setEditingField] = useState<'username' | 'password' | null>(null)
+  const [editValue, setEditValue] = useState("")
   const { toast } = useToast()
 
   const handleCreateUser = () => {
@@ -310,6 +312,57 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
       title: "Role updated",
       description: "User role has been updated successfully",
     })
+  }
+
+  const handleStartEdit = (userId: string, field: 'username' | 'password') => {
+    const user = users.find(u => u.id === userId)
+    if (user) {
+      setEditingUser(userId)
+      setEditingField(field)
+      setEditValue(user[field])
+    }
+  }
+
+  const handleSaveEdit = () => {
+    if (!editingUser || !editingField || !editValue.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid value",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Check for duplicates
+    if (editingField === 'username' && users.find(u => u.username === editValue && u.id !== editingUser)) {
+      toast({
+        title: "Error",
+        description: "Username already exists",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const updatedUsers = users.map(user => 
+      user.id === editingUser ? { ...user, [editingField]: editValue } : user
+    )
+    setUsers(updatedUsers)
+    localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
+    
+    setEditingUser(null)
+    setEditingField(null)
+    setEditValue("")
+    
+    toast({
+      title: "User updated",
+      description: `${editingField} has been updated successfully`,
+    })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingUser(null)
+    setEditingField(null)
+    setEditValue("")
   }
 
   const handleAddOrganization = () => {
@@ -461,24 +514,75 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
               {users.map(user => (
                 <TableRow key={user.id}>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.username}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono">
-                        {visiblePasswords.has(user.id) ? user.password : '••••••••'}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => togglePasswordVisibility(user.id)}
-                      >
-                        {visiblePasswords.has(user.id) ? 
-                          <EyeOff className="h-4 w-4" /> : 
-                          <Eye className="h-4 w-4" />
-                        }
-                      </Button>
-                    </div>
+                    {editingUser === user.id && editingField === 'username' ? (
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          value={editValue} 
+                          onChange={e => setEditValue(e.target.value)}
+                          className="w-32"
+                        />
+                        <Button size="sm" onClick={handleSaveEdit}>
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span>{user.username}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleStartEdit(user.id, 'username')}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingUser === user.id && editingField === 'password' ? (
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="text"
+                          value={editValue} 
+                          onChange={e => setEditValue(e.target.value)}
+                          className="w-32"
+                        />
+                        <Button size="sm" onClick={handleSaveEdit}>
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono">
+                          {visiblePasswords.has(user.id) ? user.password : '••••••••'}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => togglePasswordVisibility(user.id)}
+                        >
+                          {visiblePasswords.has(user.id) ? 
+                            <EyeOff className="h-4 w-4" /> : 
+                            <Eye className="h-4 w-4" />
+                          }
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleStartEdit(user.id, 'password')}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Select 
@@ -519,18 +623,66 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
 export default function CredentialApp() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   
-  // Load users from localStorage or use default
+  // Load users from localStorage or use default with permanent admins
   const [users, setUsers] = useState<User[]>(() => {
     const savedUsers = localStorage.getItem('jessUsers')
     if (savedUsers) {
-      return JSON.parse(savedUsers)
+      const existingUsers = JSON.parse(savedUsers)
+      
+      // Add permanent admin accounts if they don't exist
+      const permanentAdmins = [
+        {
+          id: 'nlacoste-admin',
+          email: "nlacoste@jess.org",
+          username: "nlacoste",
+          password: "JESS2025",
+          role: 'admin' as const,
+          createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
+        },
+        {
+          id: 'tmckee-admin',
+          email: "tmckee@jess.org",
+          username: "tmckee",
+          password: "JESS2025",
+          role: 'admin' as const,
+          createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
+        }
+      ]
+      
+      const updatedUsers = [...existingUsers]
+      
+      permanentAdmins.forEach(admin => {
+        if (!updatedUsers.find(u => u.username === admin.username)) {
+          updatedUsers.push(admin)
+        }
+      })
+      
+      localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
+      return updatedUsers
     }
+    
     const defaultUsers = [
       {
         id: uuidv4(),
         email: "admin@yourjournal.org",
         username: "admin",
         password: "password123",
+        role: 'admin' as const,
+        createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
+      },
+      {
+        id: 'nlacoste-admin',
+        email: "nlacoste@jess.org",
+        username: "nlacoste",
+        password: "JESS2025",
+        role: 'admin' as const,
+        createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
+      },
+      {
+        id: 'tmckee-admin',
+        email: "tmckee@jess.org",
+        username: "tmckee",
+        password: "JESS2025",
         role: 'admin' as const,
         createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
       }
