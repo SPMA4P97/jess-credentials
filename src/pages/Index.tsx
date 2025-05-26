@@ -1,6 +1,7 @@
+
 // Lovable-compatible React app with credential generation, public viewer, login gating, and credential table
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -11,6 +12,7 @@ import { format } from 'date-fns'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import CredentialForm from '@/components/CredentialForm'
 import CredentialsList from '@/components/CredentialsList'
 import CredentialResultDialog from '@/components/CredentialResultDialog'
@@ -18,6 +20,7 @@ import CredentialResultDialog from '@/components/CredentialResultDialog'
 interface User {
   id: string
   email: string
+  username: string
   password: string
   role: 'admin' | 'user'
   createdAt: string
@@ -48,13 +51,16 @@ function CredentialViewer({ id }) {
 }
 
 function Login({ onLogin, users }) {
-  const [email, setEmail] = useState("")
+  const [emailOrUsername, setEmailOrUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const { toast } = useToast()
 
   const handleLogin = () => {
-    const user = users.find(u => u.email === email && u.password === password)
+    const user = users.find(u => 
+      (u.email === emailOrUsername || u.username === emailOrUsername) && 
+      u.password === password
+    )
     if (user) {
       onLogin(user)
       toast({
@@ -64,7 +70,7 @@ function Login({ onLogin, users }) {
     } else {
       toast({
         title: "Login failed",
-        description: "Invalid email or password",
+        description: "Invalid email/username or password",
         variant: "destructive",
       })
     }
@@ -81,9 +87,9 @@ function Login({ onLogin, users }) {
       <CardContent className="space-y-4">
         <h2 className="text-xl font-semibold">JESS Admin Login</h2>
         <Input 
-          placeholder="Email" 
-          value={email} 
-          onChange={e => setEmail(e.target.value)}
+          placeholder="Email or Username" 
+          value={emailOrUsername} 
+          onChange={e => setEmailOrUsername(e.target.value)}
           onKeyPress={handleKeyPress}
         />
         <div className="relative">
@@ -112,6 +118,7 @@ function Login({ onLogin, users }) {
 
 function UserManagement({ users, setUsers, currentUser, organizations, setOrganizations }) {
   const [newEmail, setNewEmail] = useState("")
+  const [newUsername, setNewUsername] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [newRole, setNewRole] = useState<'admin' | 'user'>('user')
   const [newOrganization, setNewOrganization] = useState("")
@@ -120,7 +127,7 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
   const { toast } = useToast()
 
   const handleCreateUser = () => {
-    if (!newEmail || !newPassword) {
+    if (!newEmail || !newUsername || !newPassword) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -138,23 +145,37 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
       return
     }
 
+    if (users.find(u => u.username === newUsername)) {
+      toast({
+        title: "Error",
+        description: "User with this username already exists",
+        variant: "destructive",
+      })
+      return
+    }
+
     const newUser: User = {
       id: uuidv4(),
       email: newEmail,
+      username: newUsername,
       password: newPassword,
       role: newRole,
       createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
     }
 
-    setUsers([...users, newUser])
+    const updatedUsers = [...users, newUser]
+    setUsers(updatedUsers)
+    localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
+    
     setNewEmail("")
+    setNewUsername("")
     setNewPassword("")
     setNewRole('user')
     setShowNewPassword(false)
     
     toast({
-      title: "User created",
-      description: `User ${newEmail} has been created successfully`,
+      title: "Account created",
+      description: `Account for ${newEmail} has been created successfully`,
     })
   }
 
@@ -168,10 +189,26 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
       return
     }
 
-    setUsers(users.filter(u => u.id !== userId))
+    const updatedUsers = users.filter(u => u.id !== userId)
+    setUsers(updatedUsers)
+    localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
+    
     toast({
       title: "User deleted",
       description: "User has been deleted successfully",
+    })
+  }
+
+  const handleRoleChange = (userId: string, newRole: 'admin' | 'user') => {
+    const updatedUsers = users.map(user => 
+      user.id === userId ? { ...user, role: newRole } : user
+    )
+    setUsers(updatedUsers)
+    localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
+    
+    toast({
+      title: "Role updated",
+      description: "User role has been updated successfully",
     })
   }
 
@@ -194,8 +231,11 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
       return
     }
 
-    setOrganizations([...organizations, newOrganization.trim()])
+    const updatedOrganizations = [...organizations, newOrganization.trim()]
+    setOrganizations(updatedOrganizations)
+    localStorage.setItem('jessOrganizations', JSON.stringify(updatedOrganizations))
     setNewOrganization("")
+    
     toast({
       title: "Organization added",
       description: `${newOrganization} has been added to the list`,
@@ -203,7 +243,10 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
   }
 
   const handleDeleteOrganization = (org: string) => {
-    setOrganizations(organizations.filter(o => o !== org))
+    const updatedOrganizations = organizations.filter(o => o !== org)
+    setOrganizations(updatedOrganizations)
+    localStorage.setItem('jessOrganizations', JSON.stringify(updatedOrganizations))
+    
     toast({
       title: "Organization removed",
       description: `${org} has been removed from the list`,
@@ -224,11 +267,16 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
     <div className="space-y-6">
       <Card>
         <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">Create New User</h3>
+          <h3 className="text-lg font-semibold">Create New Account</h3>
           <Input 
             placeholder="Email" 
             value={newEmail} 
             onChange={e => setNewEmail(e.target.value)} 
+          />
+          <Input 
+            placeholder="Username" 
+            value={newUsername} 
+            onChange={e => setNewUsername(e.target.value)} 
           />
           <div className="relative">
             <Input 
@@ -247,15 +295,16 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
               {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
           </div>
-          <select 
-            className="w-full p-2 border rounded-md" 
-            value={newRole} 
-            onChange={e => setNewRole(e.target.value as 'admin' | 'user')}
-          >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-          <Button onClick={handleCreateUser}>Create User</Button>
+          <Select value={newRole} onValueChange={(value: 'admin' | 'user') => setNewRole(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="user">User</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleCreateUser}>Create Account</Button>
         </CardContent>
       </Card>
 
@@ -294,6 +343,7 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
             <TableHeader>
               <TableRow>
                 <TableCell>Email</TableCell>
+                <TableCell>Username</TableCell>
                 <TableCell>Password</TableCell>
                 <TableCell>Role</TableCell>
                 <TableCell>Created</TableCell>
@@ -304,6 +354,7 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
               {users.map(user => (
                 <TableRow key={user.id}>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.username}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <span className="font-mono">
@@ -323,11 +374,18 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {user.role}
-                    </span>
+                    <Select 
+                      value={user.role} 
+                      onValueChange={(value: 'admin' | 'user') => handleRoleChange(user.id, value)}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell>{user.createdAt}</TableCell>
                   <TableCell>
@@ -353,21 +411,43 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
 
 export default function CredentialApp() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: uuidv4(),
-      email: "admin@yourjournal.org",
-      password: "password123",
-      role: 'admin',
-      createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
+  
+  // Load users from localStorage or use default
+  const [users, setUsers] = useState<User[]>(() => {
+    const savedUsers = localStorage.getItem('jessUsers')
+    if (savedUsers) {
+      return JSON.parse(savedUsers)
     }
-  ])
-  const [organizations, setOrganizations] = useState<string[]>([
-    "Journal of Environmental Science",
-    "International Review of Economics",
-    "Medical Research Quarterly",
-    "Tech Innovation Today"
-  ])
+    const defaultUsers = [
+      {
+        id: uuidv4(),
+        email: "admin@yourjournal.org",
+        username: "admin",
+        password: "password123",
+        role: 'admin' as const,
+        createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
+      }
+    ]
+    localStorage.setItem('jessUsers', JSON.stringify(defaultUsers))
+    return defaultUsers
+  })
+
+  // Load organizations from localStorage or use default
+  const [organizations, setOrganizations] = useState<string[]>(() => {
+    const savedOrganizations = localStorage.getItem('jessOrganizations')
+    if (savedOrganizations) {
+      return JSON.parse(savedOrganizations)
+    }
+    const defaultOrganizations = [
+      "Journal of Environmental Science",
+      "International Review of Economics", 
+      "Medical Research Quarterly",
+      "Tech Innovation Today"
+    ]
+    localStorage.setItem('jessOrganizations', JSON.stringify(defaultOrganizations))
+    return defaultOrganizations
+  })
+
   const [credentials, setCredentials] = useState<Credential[]>([])
   const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
