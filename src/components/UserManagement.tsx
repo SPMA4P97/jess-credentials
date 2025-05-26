@@ -5,6 +5,9 @@ import { LogOut, Users, FileText, Settings } from 'lucide-react'
 import CredentialForm from './CredentialForm'
 import CredentialsList from './CredentialsList'
 import PDFViewer from './PDFViewer'
+import OrganizationManager from './OrganizationManager'
+import RoleManager from './RoleManager'
+import UserTable from './UserTable'
 
 interface User {
   id: string
@@ -152,21 +155,11 @@ export default function UserManagement({
           {activeTab === 'users' && currentUser.role === 'admin' && (
             <div>
               <h2 className="text-xl font-semibold mb-4">User Management</h2>
-              <div className="space-y-4">
-                {users.map(user => (
-                  <Card key={user.id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-semibold">{user.email}</p>
-                          <p className="text-sm text-gray-600">Role: {user.role}</p>
-                          <p className="text-sm text-gray-600">Created: {user.createdAt}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <UserTable 
+                users={users}
+                setUsers={setUsers}
+                currentUser={currentUser}
+              />
             </div>
           )}
 
@@ -175,35 +168,15 @@ export default function UserManagement({
               <h2 className="text-xl font-semibold mb-4">System Settings</h2>
               
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Organizations</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {organizations.map((org, index) => (
-                        <div key={index} className="p-2 bg-gray-50 rounded">
-                          {org}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Available Roles</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {roles.map((role, index) => (
-                        <div key={index} className="p-2 bg-gray-50 rounded">
-                          {role}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <OrganizationManager 
+                  organizations={organizations}
+                  setOrganizations={setOrganizations}
+                />
+                
+                <RoleManager 
+                  roles={roles}
+                  setRoles={setRoles}
+                />
               </div>
             </div>
           )}
