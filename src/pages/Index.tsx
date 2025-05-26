@@ -1,3 +1,4 @@
+
 // Lovable-compatible React app with credential generation, public viewer, login gating, and credential table
 
 import { useState } from 'react'
