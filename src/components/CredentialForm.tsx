@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,16 +12,11 @@ import { Calendar } from 'lucide-react'
 
 interface CredentialFormProps {
   organizations: string[]
+  roles: string[]
   onCredentialGenerated: (credential: any) => void
 }
 
-const volumes = [
-  "Volume 1", "Volume 2", "Volume 3", "Volume 4", "Volume 5",
-  "Volume 6", "Volume 7", "Volume 8", "Volume 9", "Volume 10",
-  "Volume 11", "Volume 12", "Volume 13", "Volume 14", "Volume 15"
-]
-
-export default function CredentialForm({ organizations, onCredentialGenerated }: CredentialFormProps) {
+export default function CredentialForm({ organizations, roles, onCredentialGenerated }: CredentialFormProps) {
   const [name, setName] = useState("")
   const [role, setRole] = useState("")
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -29,24 +25,18 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
   const [selectedOrganization, setSelectedOrganization] = useState("")
   const [volumesInput, setVolumesInput] = useState("")
   const [hideVolumes, setHideVolumes] = useState(false)
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString())
+  const [customYear, setCustomYear] = useState(new Date().getFullYear().toString())
 
   const handleSetYearDates = () => {
-    const year = parseInt(selectedYear)
+    const year = parseInt(customYear)
+    if (isNaN(year) || year < 1900 || year > 2100) {
+      return
+    }
     const startOfYear = `${year}-01-01`
     const endOfYear = `${year}-12-31`
     
     setDate(startOfYear)
     setExpiry(endOfYear)
-  }
-
-  const generateYearOptions = () => {
-    const currentYear = new Date().getFullYear()
-    const years = []
-    for (let year = currentYear + 5; year >= currentYear - 20; year--) {
-      years.push(year.toString())
-    }
-    return years
   }
 
   const parseVolumes = (input: string): string[] => {
@@ -97,7 +87,7 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
     setSelectedOrganization("")
     setVolumesInput("")
     setHideVolumes(false)
-    setSelectedYear(new Date().getFullYear().toString())
+    setCustomYear(new Date().getFullYear().toString())
   }
 
   return (
@@ -121,7 +111,20 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
           </div>
 
           <Input placeholder="Recipient Name" value={name} onChange={e => setName(e.target.value)} />
-          <Input placeholder="Role (e.g., Peer Reviewer)" value={role} onChange={e => setRole(e.target.value)} />
+          
+          <div>
+            <h3 className="text-sm font-medium mb-2">Role</h3>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map(r => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -137,21 +140,25 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
 
           <div className="flex gap-2 items-end">
             <div className="flex-1">
-              <h3 className="text-sm font-medium mb-2">Select Year</h3>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {generateYearOptions().map(year => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <h3 className="text-sm font-medium mb-2">Year</h3>
+              <Input 
+                type="number" 
+                min="1900" 
+                max="2100" 
+                value={customYear} 
+                onChange={e => setCustomYear(e.target.value)}
+                placeholder="Enter any year"
+              />
             </div>
-            <Button type="button" onClick={handleSetYearDates} variant="outline" className="flex items-center gap-2">
-              <Calendar size={16} />
-              Set Year Dates
+            <Button 
+              type="button" 
+              onClick={handleSetYearDates} 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-1 text-xs px-2 py-1 h-8"
+            >
+              <Calendar size={12} />
+              Set as Full Year
             </Button>
           </div>
 
@@ -160,7 +167,10 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
               <Checkbox 
                 id="hide-volumes" 
                 checked={hideVolumes} 
-                onCheckedChange={(checked) => setHideVolumes(checked === true)}
+                onCheckedChange={(checked) => {
+                  if (checked === "indeterminate") return
+                  setHideVolumes(checked)
+                }}
               />
               <label htmlFor="hide-volumes" className="text-sm font-medium">
                 Hide volumes from credential
