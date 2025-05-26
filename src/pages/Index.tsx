@@ -70,17 +70,29 @@ function Login({ onLogin, users }) {
     }
   }
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin()
+    }
+  }
+
   return (
     <Card className="max-w-md mx-auto mt-10">
       <CardContent className="space-y-4">
         <h2 className="text-xl font-semibold">JESS Admin Login</h2>
-        <Input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+        <Input 
+          placeholder="Email" 
+          value={email} 
+          onChange={e => setEmail(e.target.value)}
+          onKeyPress={handleKeyPress}
+        />
         <div className="relative">
           <Input 
             type={showPassword ? "text" : "password"} 
             placeholder="Password" 
             value={password} 
-            onChange={e => setPassword(e.target.value)} 
+            onChange={e => setPassword(e.target.value)}
+            onKeyPress={handleKeyPress}
           />
           <Button
             type="button"
@@ -104,6 +116,7 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
   const [newRole, setNewRole] = useState<'admin' | 'user'>('user')
   const [newOrganization, setNewOrganization] = useState("")
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set())
+  const [showNewPassword, setShowNewPassword] = useState(false)
   const { toast } = useToast()
 
   const handleCreateUser = () => {
@@ -137,6 +150,7 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
     setNewEmail("")
     setNewPassword("")
     setNewRole('user')
+    setShowNewPassword(false)
     
     toast({
       title: "User created",
@@ -216,12 +230,23 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
             value={newEmail} 
             onChange={e => setNewEmail(e.target.value)} 
           />
-          <Input 
-            type="password" 
-            placeholder="Password" 
-            value={newPassword} 
-            onChange={e => setNewPassword(e.target.value)} 
-          />
+          <div className="relative">
+            <Input 
+              type={showNewPassword ? "text" : "password"} 
+              placeholder="Password" 
+              value={newPassword} 
+              onChange={e => setNewPassword(e.target.value)} 
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+            >
+              {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
           <select 
             className="w-full p-2 border rounded-md" 
             value={newRole} 
