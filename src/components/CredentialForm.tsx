@@ -122,7 +122,7 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
               <Checkbox 
                 id="hide-volumes" 
                 checked={hideVolumes} 
-                onCheckedChange={setHideVolumes}
+                onCheckedChange={(checked) => setHideVolumes(checked === true)}
               />
               <label htmlFor="hide-volumes" className="text-sm font-medium">
                 Hide volumes from credential
@@ -138,7 +138,7 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
                       <Checkbox 
                         id={volume}
                         checked={selectedVolumes.includes(volume)}
-                        onCheckedChange={(checked) => handleVolumeChange(volume, checked as boolean)}
+                        onCheckedChange={(checked) => handleVolumeChange(volume, checked === true)}
                       />
                       <label htmlFor={volume} className="text-xs">
                         {volume}
