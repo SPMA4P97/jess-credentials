@@ -1,13 +1,8 @@
+
 import { useState } from 'react'
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, Edit2, Check, X } from 'lucide-react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { v4 as uuidv4 } from 'uuid'
-import { format } from 'date-fns'
+import { LogOut, Users, FileText, Settings } from 'lucide-react'
 
 interface User {
   id: string
@@ -23,7 +18,7 @@ interface UserManagementProps {
   setUsers: (users: User[]) => void
   currentUser: User
   organizations: string[]
-  setOrganizations: (organizations: string[]) => void
+  setOrganizations: (orgs: string[]) => void
   roles: string[]
   setRoles: (roles: string[]) => void
 }
@@ -37,483 +32,133 @@ export default function UserManagement({
   roles, 
   setRoles 
 }: UserManagementProps) {
-  const [newEmail, setNewEmail] = useState("")
-  const [newUsername, setNewUsername] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [newRole, setNewRole] = useState<'admin' | 'user'>('user')
-  const [newOrganization, setNewOrganization] = useState("")
-  const [newCredentialRole, setNewCredentialRole] = useState("")
-  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set())
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [editingUser, setEditingUser] = useState<string | null>(null)
-  const [editingField, setEditingField] = useState<'username' | 'password' | null>(null)
-  const [editValue, setEditValue] = useState("")
-  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState<'credentials' | 'users' | 'settings'>('credentials')
 
-  const handleCreateUser = () => {
-    if (!newEmail || !newUsername || !newPassword) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (users.find(u => u.email === newEmail)) {
-      toast({
-        title: "Error",
-        description: "User with this email already exists",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (users.find(u => u.username === newUsername)) {
-      toast({
-        title: "Error",
-        description: "User with this username already exists",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const newUser: User = {
-      id: uuidv4(),
-      email: newEmail,
-      username: newUsername,
-      password: newPassword,
-      role: newRole,
-      createdAt: format(new Date(), 'yyyy-MM-dd HH:mm')
-    }
-
-    const updatedUsers = [...users, newUser]
-    setUsers(updatedUsers)
-    localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
-    
-    setNewEmail("")
-    setNewUsername("")
-    setNewPassword("")
-    setNewRole('user')
-    setShowNewPassword(false)
-    
-    toast({
-      title: "Account created",
-      description: `Account for ${newEmail} has been created successfully`,
-    })
-  }
-
-  const handleDeleteUser = (userId: string) => {
-    if (userId === currentUser.id) {
-      toast({
-        title: "Error",
-        description: "You cannot delete your own account",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const updatedUsers = users.filter(u => u.id !== userId)
-    setUsers(updatedUsers)
-    localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
-    
-    toast({
-      title: "User deleted",
-      description: "User has been deleted successfully",
-    })
-  }
-
-  const handleRoleChange = (userId: string, newRole: 'admin' | 'user') => {
-    const updatedUsers = users.map(user => 
-      user.id === userId ? { ...user, role: newRole } : user
-    )
-    setUsers(updatedUsers)
-    localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
-    
-    toast({
-      title: "Role updated",
-      description: "User role has been updated successfully",
-    })
-  }
-
-  const handleStartEdit = (userId: string, field: 'username' | 'password') => {
-    const user = users.find(u => u.id === userId)
-    if (user) {
-      setEditingUser(userId)
-      setEditingField(field)
-      setEditValue(user[field])
-    }
-  }
-
-  const handleSaveEdit = () => {
-    if (!editingUser || !editingField || !editValue.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid value",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Check for duplicates
-    if (editingField === 'username' && users.find(u => u.username === editValue && u.id !== editingUser)) {
-      toast({
-        title: "Error",
-        description: "Username already exists",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const updatedUsers = users.map(user => 
-      user.id === editingUser ? { ...user, [editingField]: editValue } : user
-    )
-    setUsers(updatedUsers)
-    localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
-    
-    setEditingUser(null)
-    setEditingField(null)
-    setEditValue("")
-    
-    toast({
-      title: "User updated",
-      description: `${editingField} has been updated successfully`,
-    })
-  }
-
-  const handleCancelEdit = () => {
-    setEditingUser(null)
-    setEditingField(null)
-    setEditValue("")
-  }
-
-  const handleAddOrganization = () => {
-    if (!newOrganization.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter an organization name",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (organizations.includes(newOrganization.trim())) {
-      toast({
-        title: "Error",
-        description: "Organization already exists",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const updatedOrganizations = [...organizations, newOrganization.trim()]
-    setOrganizations(updatedOrganizations)
-    localStorage.setItem('jessOrganizations', JSON.stringify(updatedOrganizations))
-    setNewOrganization("")
-    
-    toast({
-      title: "Organization added",
-      description: `${newOrganization} has been added to the list`,
-    })
-  }
-
-  const handleDeleteOrganization = (org: string) => {
-    const updatedOrganizations = organizations.filter(o => o !== org)
-    setOrganizations(updatedOrganizations)
-    localStorage.setItem('jessOrganizations', JSON.stringify(updatedOrganizations))
-    
-    toast({
-      title: "Organization removed",
-      description: `${org} has been removed from the list`,
-    })
-  }
-
-  const handleAddRole = () => {
-    if (!newCredentialRole.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a role name",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (roles.includes(newCredentialRole.trim())) {
-      toast({
-        title: "Error",
-        description: "Role already exists",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const updatedRoles = [...roles, newCredentialRole.trim()]
-    setRoles(updatedRoles)
-    localStorage.setItem('jessRoles', JSON.stringify(updatedRoles))
-    setNewCredentialRole("")
-    
-    toast({
-      title: "Role added",
-      description: `${newCredentialRole} has been added to the list`,
-    })
-  }
-
-  const handleDeleteRole = (role: string) => {
-    const updatedRoles = roles.filter(r => r !== role)
-    setRoles(updatedRoles)
-    localStorage.setItem('jessRoles', JSON.stringify(updatedRoles))
-    
-    toast({
-      title: "Role removed",
-      description: `${role} has been removed from the list`,
-    })
-  }
-
-  const handleOrganizationKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleAddOrganization()
-    }
-  }
-
-  const handleRoleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleAddRole()
-    }
-  }
-
-  const togglePasswordVisibility = (userId: string) => {
-    const newVisiblePasswords = new Set(visiblePasswords)
-    if (newVisiblePasswords.has(userId)) {
-      newVisiblePasswords.delete(userId)
-    } else {
-      newVisiblePasswords.add(userId)
-    }
-    setVisiblePasswords(newVisiblePasswords)
+  const handleLogout = () => {
+    localStorage.removeItem('jessCredentialsAuth')
+    window.location.reload()
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">Create New Account</h3>
-          <Input 
-            placeholder="Email" 
-            value={newEmail} 
-            onChange={e => setNewEmail(e.target.value)} 
-          />
-          <Input 
-            placeholder="Username" 
-            value={newUsername} 
-            onChange={e => setNewUsername(e.target.value)} 
-          />
-          <div className="relative">
-            <Input 
-              type={showNewPassword ? "text" : "password"} 
-              placeholder="Password" 
-              value={newPassword} 
-              onChange={e => setNewPassword(e.target.value)} 
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-            >
-              {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-blue-800">JESS Credentials Portal</h1>
+              <p className="text-gray-600">Welcome, {currentUser.email}</p>
+            </div>
+            <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2">
+              <LogOut size={16} />
+              Logout
             </Button>
           </div>
-          <Select value={newRole} onValueChange={(value: 'admin' | 'user') => setNewRole(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="user">User</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={handleCreateUser}>Create Account</Button>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">Manage Issuing Organizations</h3>
-          <div className="flex gap-2">
-            <Input 
-              placeholder="Organization name" 
-              value={newOrganization} 
-              onChange={e => setNewOrganization(e.target.value)}
-              onKeyPress={handleOrganizationKeyPress}
-            />
-            <Button onClick={handleAddOrganization}>Add</Button>
-          </div>
-          <div className="space-y-2">
-            {organizations.map(org => (
-              <div key={org} className="flex justify-between items-center p-2 border rounded">
-                <span>{org}</span>
-                <Button 
-                  onClick={() => handleDeleteOrganization(org)} 
-                  variant="destructive" 
-                  size="sm"
+        {/* Navigation */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex space-x-4">
+            <Button
+              variant={activeTab === 'credentials' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('credentials')}
+              className="flex items-center gap-2"
+            >
+              <FileText size={16} />
+              Credentials
+            </Button>
+            {currentUser.role === 'admin' && (
+              <>
+                <Button
+                  variant={activeTab === 'users' ? 'default' : 'outline'}
+                  onClick={() => setActiveTab('users')}
+                  className="flex items-center gap-2"
                 >
-                  Remove
+                  <Users size={16} />
+                  Users
                 </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">Manage Credential Roles</h3>
-          <div className="flex gap-2">
-            <Input 
-              placeholder="Role name (e.g., Peer Reviewer, Editor)" 
-              value={newCredentialRole} 
-              onChange={e => setNewCredentialRole(e.target.value)}
-              onKeyPress={handleRoleKeyPress}
-            />
-            <Button onClick={handleAddRole}>Add</Button>
-          </div>
-          <div className="space-y-2">
-            {roles.map(role => (
-              <div key={role} className="flex justify-between items-center p-2 border rounded">
-                <span>{role}</span>
-                <Button 
-                  onClick={() => handleDeleteRole(role)} 
-                  variant="destructive" 
-                  size="sm"
+                <Button
+                  variant={activeTab === 'settings' ? 'default' : 'outline'}
+                  onClick={() => setActiveTab('settings')}
+                  className="flex items-center gap-2"
                 >
-                  Remove
+                  <Settings size={16} />
+                  Settings
                 </Button>
-              </div>
-            ))}
+              </>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">User Management</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell>Email</TableCell>
-                <TableCell>Username</TableCell>
-                <TableCell>Password</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Created</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map(user => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {editingUser === user.id && editingField === 'username' ? (
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          value={editValue} 
-                          onChange={e => setEditValue(e.target.value)}
-                          className="w-32"
-                        />
-                        <Button size="sm" onClick={handleSaveEdit}>
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
-                          <X className="h-4 w-4" />
-                        </Button>
+        {/* Content */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          {activeTab === 'credentials' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Manage Credentials</h2>
+              <p className="text-gray-600">Credential management functionality will be implemented here.</p>
+            </div>
+          )}
+
+          {activeTab === 'users' && currentUser.role === 'admin' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">User Management</h2>
+              <div className="space-y-4">
+                {users.map(user => (
+                  <Card key={user.id}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold">{user.email}</p>
+                          <p className="text-sm text-gray-600">Role: {user.role}</p>
+                          <p className="text-sm text-gray-600">Created: {user.createdAt}</p>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span>{user.username}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleStartEdit(user.id, 'username')}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingUser === user.id && editingField === 'password' ? (
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          type="text"
-                          value={editValue} 
-                          onChange={e => setEditValue(e.target.value)}
-                          className="w-32"
-                        />
-                        <Button size="sm" onClick={handleSaveEdit}>
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono">
-                          {visiblePasswords.has(user.id) ? user.password : '••••••••'}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => togglePasswordVisibility(user.id)}
-                        >
-                          {visiblePasswords.has(user.id) ? 
-                            <EyeOff className="h-4 w-4" /> : 
-                            <Eye className="h-4 w-4" />
-                          }
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleStartEdit(user.id, 'password')}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Select 
-                      value={user.role} 
-                      onValueChange={(value: 'admin' | 'user') => handleRoleChange(user.id, value)}
-                    >
-                      <SelectTrigger className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>{user.createdAt}</TableCell>
-                  <TableCell>
-                    {user.id !== currentUser.id && (
-                      <Button 
-                        onClick={() => handleDeleteUser(user.id)} 
-                        variant="destructive" 
-                        size="sm"
-                      >
-                        Delete
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'settings' && currentUser.role === 'admin' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">System Settings</h2>
+              
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Organizations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {organizations.map((org, index) => (
+                        <div key={index} className="p-2 bg-gray-50 rounded">
+                          {org}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Available Roles</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {roles.map((role, index) => (
+                        <div key={index} className="p-2 bg-gray-50 rounded">
+                          {role}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
