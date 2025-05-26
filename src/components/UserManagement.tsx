@@ -3,6 +3,9 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { LogOut, Users, FileText, Settings } from 'lucide-react'
+import CredentialForm from './CredentialForm'
+import CredentialsList from './CredentialsList'
+import PDFViewer from './PDFViewer'
 
 interface User {
   id: string
@@ -11,6 +14,18 @@ interface User {
   password: string
   role: 'admin' | 'user'
   createdAt: string
+}
+
+interface Credential {
+  id: string
+  name: string
+  role: string
+  organization: string
+  date: string
+  issue: string
+  expiry: string
+  volumes?: string[]
+  hideVolumes?: boolean
 }
 
 interface UserManagementProps {
@@ -33,10 +48,31 @@ export default function UserManagement({
   setRoles 
 }: UserManagementProps) {
   const [activeTab, setActiveTab] = useState<'credentials' | 'users' | 'settings'>('credentials')
+  const [credentials, setCredentials] = useState<Credential[]>(() => {
+    const saved = localStorage.getItem('jessCredentials')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [pdfCredential, setPdfCredential] = useState<Credential | null>(null)
 
   const handleLogout = () => {
     localStorage.removeItem('jessCredentialsAuth')
     window.location.reload()
+  }
+
+  const handleCredentialGenerated = (credential: Credential) => {
+    const updatedCredentials = [...credentials, credential]
+    setCredentials(updatedCredentials)
+    localStorage.setItem('jessCredentials', JSON.stringify(updatedCredentials))
+  }
+
+  const handleDeleteCredential = (id: string) => {
+    const updatedCredentials = credentials.filter(c => c.id !== id)
+    setCredentials(updatedCredentials)
+    localStorage.setItem('jessCredentials', JSON.stringify(updatedCredentials))
+  }
+
+  const handleViewPDF = (credential: Credential) => {
+    setPdfCredential(credential)
   }
 
   return (
@@ -93,9 +129,24 @@ export default function UserManagement({
         {/* Content */}
         <div className="bg-white rounded-lg shadow-md p-6">
           {activeTab === 'credentials' && (
-            <div>
+            <div className="space-y-6">
               <h2 className="text-xl font-semibold mb-4">Manage Credentials</h2>
-              <p className="text-gray-600">Credential management functionality will be implemented here.</p>
+              
+              <div className="grid lg:grid-cols-2 gap-6">
+                <CredentialForm 
+                  organizations={organizations}
+                  roles={roles}
+                  onCredentialGenerated={handleCredentialGenerated}
+                />
+                
+                <div>
+                  <CredentialsList 
+                    credentials={credentials}
+                    onDelete={handleDeleteCredential}
+                    onViewPDF={handleViewPDF}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
@@ -159,6 +210,13 @@ export default function UserManagement({
           )}
         </div>
       </div>
+
+      {pdfCredential && (
+        <PDFViewer 
+          credential={pdfCredential}
+          onClose={() => setPdfCredential(null)}
+        />
+      )}
     </div>
   )
 }
