@@ -1,3 +1,4 @@
+
 // Lovable-compatible React app with credential generation, public viewer, login gating, and credential table
 
 import { useState } from 'react'
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
-import { useRouter } from 'next/router'
+import { useSearchParams } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
 import { format } from 'date-fns'
 
@@ -58,8 +59,8 @@ export default function CredentialApp() {
   const [submitted, setSubmitted] = useState(false)
   const [credentialId, setCredentialId] = useState("")
   const [credentials, setCredentials] = useState([])
-  const router = useRouter()
-  const credentialFromURL = router.query.credentialId
+  const [searchParams] = useSearchParams()
+  const credentialFromURL = searchParams.get('credentialId')
 
   const handleGenerate = () => {
     const newId = uuidv4().split('-')[0]
