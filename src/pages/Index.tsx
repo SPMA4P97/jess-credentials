@@ -1,6 +1,3 @@
-
-// Lovable-compatible React app with credential generation, public viewer, login gating, and credential table
-
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import CredentialForm from '@/components/CredentialForm'
 import CredentialsList from '@/components/CredentialsList'
 import CredentialResultDialog from '@/components/CredentialResultDialog'
+import PDFViewer from '@/components/PDFViewer'
 
 interface User {
   id: string
@@ -34,6 +32,8 @@ interface Credential {
   date: string
   issue: string
   expiry: string
+  volumes?: string[]
+  hideVolumes?: boolean
 }
 
 function CredentialViewer({ id }) {
@@ -85,7 +85,7 @@ function Login({ onLogin, users }) {
   return (
     <Card className="max-w-md mx-auto mt-10">
       <CardContent className="space-y-4">
-        <h2 className="text-xl font-semibold">JESS Admin Login</h2>
+        <h2 className="text-xl font-semibold">JESS Credentials Login</h2>
         <Input 
           placeholder="Email or Username" 
           value={emailOrUsername} 
@@ -253,6 +253,12 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
     })
   }
 
+  const handleOrganizationKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAddOrganization()
+    }
+  }
+
   const togglePasswordVisibility = (userId: string) => {
     const newVisiblePasswords = new Set(visiblePasswords)
     if (newVisiblePasswords.has(userId)) {
@@ -315,7 +321,8 @@ function UserManagement({ users, setUsers, currentUser, organizations, setOrgani
             <Input 
               placeholder="Organization name" 
               value={newOrganization} 
-              onChange={e => setNewOrganization(e.target.value)} 
+              onChange={e => setNewOrganization(e.target.value)}
+              onKeyPress={handleOrganizationKeyPress}
             />
             <Button onClick={handleAddOrganization}>Add</Button>
           </div>
@@ -451,6 +458,8 @@ export default function CredentialApp() {
   const [credentials, setCredentials] = useState<Credential[]>([])
   const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false)
+  const [pdfCredential, setPdfCredential] = useState<Credential | null>(null)
   const [searchParams] = useSearchParams()
   const credentialFromURL = searchParams.get('credentialId')
 
@@ -462,6 +471,12 @@ export default function CredentialApp() {
 
   const handleDeleteCredential = (idToDelete: string) => {
     setCredentials(credentials.filter(c => c.id !== idToDelete))
+  }
+
+  const handleViewPDF = (credential: Credential) => {
+    setPdfCredential(credential)
+    setIsPDFViewerOpen(true)
+    setIsDialogOpen(false) // Close result dialog if open
   }
 
   const handleLogout = () => {
@@ -506,6 +521,7 @@ export default function CredentialApp() {
           <CredentialsList 
             credentials={credentials}
             onDelete={handleDeleteCredential}
+            onViewPDF={handleViewPDF}
           />
         </TabsContent>
         
@@ -524,6 +540,13 @@ export default function CredentialApp() {
         credential={selectedCredential}
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
+        onViewPDF={handleViewPDF}
+      />
+
+      <PDFViewer
+        credential={pdfCredential}
+        isOpen={isPDFViewerOpen}
+        onClose={() => setIsPDFViewerOpen(false)}
       />
     </div>
   )

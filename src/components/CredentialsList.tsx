@@ -2,6 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { FileText } from 'lucide-react'
 
 interface Credential {
   id: string
@@ -11,14 +12,17 @@ interface Credential {
   date: string
   issue: string
   expiry: string
+  volumes?: string[]
+  hideVolumes?: boolean
 }
 
 interface CredentialsListProps {
   credentials: Credential[]
   onDelete: (id: string) => void
+  onViewPDF: (credential: Credential) => void
 }
 
-export default function CredentialsList({ credentials, onDelete }: CredentialsListProps) {
+export default function CredentialsList({ credentials, onDelete, onViewPDF }: CredentialsListProps) {
   if (credentials.length === 0) {
     return (
       <Card>
@@ -41,6 +45,7 @@ export default function CredentialsList({ credentials, onDelete }: CredentialsLi
               <TableCell>Role</TableCell>
               <TableCell>Issue Date</TableCell>
               <TableCell>Expiry</TableCell>
+              <TableCell>Volumes</TableCell>
               <TableCell>ID</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -53,9 +58,25 @@ export default function CredentialsList({ credentials, onDelete }: CredentialsLi
                 <TableCell>{c.role}</TableCell>
                 <TableCell>{c.date}</TableCell>
                 <TableCell>{c.expiry || '—'}</TableCell>
+                <TableCell>
+                  {c.hideVolumes ? '—' : (c.volumes?.length ? c.volumes.join(', ') : '—')}
+                </TableCell>
                 <TableCell>{c.id}</TableCell>
                 <TableCell>
-                  <Button onClick={() => onDelete(c.id)} variant="destructive">Remove</Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => onViewPDF(c)} 
+                      variant="outline" 
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <FileText size={14} />
+                      PDF
+                    </Button>
+                    <Button onClick={() => onDelete(c.id)} variant="destructive" size="sm">
+                      Remove
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
