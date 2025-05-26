@@ -1,7 +1,8 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { FileText } from 'lucide-react'
+import { FileText, Copy } from 'lucide-react'
+import { useToast } from "@/hooks/use-toast"
 
 interface Credential {
   id: string
@@ -23,7 +24,19 @@ interface CredentialResultDialogProps {
 }
 
 export default function CredentialResultDialog({ credential, isOpen, onClose, onViewPDF }: CredentialResultDialogProps) {
+  const { toast } = useToast()
+  
   if (!credential) return null
+
+  const credentialURL = `${window.location.origin}/?credentialId=${credential.id}`
+
+  const handleCopyURL = () => {
+    navigator.clipboard.writeText(credentialURL)
+    toast({
+      title: "URL Copied",
+      description: "Credential URL has been copied to clipboard",
+    })
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -42,7 +55,18 @@ export default function CredentialResultDialog({ credential, isOpen, onClose, on
           )}
           <p><strong>Journal Info:</strong> {credential.issue}</p>
           <p><strong>Credential ID:</strong> {credential.id}</p>
-          <p><strong>Credential URL:</strong> https://yourjournal.org/credentials/{credential.id}</p>
+          
+          <div className="bg-gray-50 p-3 rounded border">
+            <p className="text-sm font-medium mb-2">Public Credential URL:</p>
+            <div className="flex gap-2">
+              <code className="flex-1 text-xs bg-white p-2 rounded border break-all">
+                {credentialURL}
+              </code>
+              <Button onClick={handleCopyURL} variant="outline" size="sm">
+                <Copy size={14} />
+              </Button>
+            </div>
+          </div>
           
           <div className="flex gap-2 pt-4">
             <Button 

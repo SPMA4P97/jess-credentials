@@ -37,16 +37,105 @@ interface Credential {
 }
 
 function CredentialViewer({ id }) {
-  if (!id) return <p className="text-center">Invalid credential ID.</p>
+  const [credentials] = useState<Credential[]>(() => {
+    const savedCredentials = localStorage.getItem('jessCredentials')
+    return savedCredentials ? JSON.parse(savedCredentials) : []
+  })
+
+  const credential = credentials.find(c => c.id === id)
+
+  if (!credential) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="text-center py-8">
+            <h2 className="text-xl font-semibold mb-4">Credential Not Found</h2>
+            <p className="text-gray-600">The credential with ID <strong>{id}</strong> could not be found.</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const formattedDate = format(new Date(credential.date), 'MMMM dd, yyyy')
+  const formattedExpiry = credential.expiry ? format(new Date(credential.expiry), 'MMMM dd, yyyy') : null
 
   return (
-    <Card className="mt-6">
-      <CardContent className="space-y-4">
-        <h3 className="text-lg font-semibold">Credential Viewer</h3>
-        <p>This is a placeholder for Credential ID: <strong>{id}</strong></p>
-        <p>In production, this page would fetch credential data from a backend or database.</p>
-      </CardContent>
-    </Card>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-4xl mx-auto">
+        <Card className="bg-white border-2 border-gray-300 shadow-lg">
+          <CardContent className="p-8">
+            <div className="text-center space-y-6">
+              {/* Header */}
+              <div className="border-b-2 border-blue-600 pb-4">
+                <h1 className="text-3xl font-bold text-blue-800 mb-2">
+                  {credential.organization}
+                </h1>
+                <h2 className="text-xl font-semibold text-gray-700">
+                  Digital Credential Certificate
+                </h2>
+              </div>
+
+              {/* Main Content */}
+              <div className="space-y-6">
+                <div className="text-lg">
+                  <p className="mb-4">This is to certify that</p>
+                  <p className="text-2xl font-bold text-blue-800 border-b border-gray-300 pb-2 mb-4">
+                    {credential.name}
+                  </p>
+                  <p className="mb-4">has successfully served as</p>
+                  <p className="text-xl font-semibold text-gray-800 mb-4">
+                    {credential.role}
+                  </p>
+                  
+                  {credential.issue && (
+                    <p className="text-gray-700 mb-4">
+                      {credential.issue}
+                    </p>
+                  )}
+
+                  {!credential.hideVolumes && credential.volumes && credential.volumes.length > 0 && (
+                    <p className="text-gray-700 mb-4">
+                      Contributing to: {credential.volumes.join(', ')}
+                    </p>
+                  )}
+                </div>
+
+                {/* Dates */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="border rounded p-3">
+                    <p className="font-semibold text-gray-600">Issue Date</p>
+                    <p className="text-lg">{formattedDate}</p>
+                  </div>
+                  
+                  {formattedExpiry && (
+                    <div className="border rounded p-3">
+                      <p className="font-semibold text-gray-600">Expiration Date</p>
+                      <p className="text-lg">{formattedExpiry}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Credential ID */}
+                <div className="border-t pt-4">
+                  <p className="text-sm text-gray-600">Credential ID</p>
+                  <p className="font-mono text-lg font-semibold">{credential.id}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Verify at: {window.location.origin}/?credentialId={credential.id}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t-2 border-blue-600 pt-4 text-xs text-gray-500">
+                <p>This digital credential is issued by {credential.organization}</p>
+                <p>Generated on {format(new Date(), 'MMMM dd, yyyy')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }
 
@@ -83,36 +172,47 @@ function Login({ onLogin, users }) {
   }
 
   return (
-    <Card className="max-w-md mx-auto mt-10">
-      <CardContent className="space-y-4">
-        <h2 className="text-xl font-semibold">JESS Credentials Login</h2>
-        <Input 
-          placeholder="Email or Username" 
-          value={emailOrUsername} 
-          onChange={e => setEmailOrUsername(e.target.value)}
-          onKeyPress={handleKeyPress}
-        />
-        <div className="relative">
-          <Input 
-            type={showPassword ? "text" : "password"} 
-            placeholder="Password" 
-            value={password} 
-            onChange={e => setPassword(e.target.value)}
-            onKeyPress={handleKeyPress}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-        </div>
-        <Button onClick={handleLogin}>Login</Button>
-      </CardContent>
-    </Card>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Card className="max-w-md mx-auto shadow-xl">
+        <CardContent className="space-y-6 p-8">
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold text-blue-800">JESS</h1>
+            <h2 className="text-xl font-semibold text-gray-700">Credentials Portal</h2>
+            <p className="text-gray-600">Journal Editorial Support System</p>
+          </div>
+          
+          <div className="space-y-4">
+            <Input 
+              placeholder="Email or Username" 
+              value={emailOrUsername} 
+              onChange={e => setEmailOrUsername(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="text-center"
+            />
+            <div className="relative">
+              <Input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="Password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="text-center"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            <Button onClick={handleLogin} className="w-full">Access Portal</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
@@ -455,7 +555,12 @@ export default function CredentialApp() {
     return defaultOrganizations
   })
 
-  const [credentials, setCredentials] = useState<Credential[]>([])
+  // Load credentials from localStorage
+  const [credentials, setCredentials] = useState<Credential[]>(() => {
+    const savedCredentials = localStorage.getItem('jessCredentials')
+    return savedCredentials ? JSON.parse(savedCredentials) : []
+  })
+
   const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false)
@@ -464,13 +569,17 @@ export default function CredentialApp() {
   const credentialFromURL = searchParams.get('credentialId')
 
   const handleCredentialGenerated = (credential: Credential) => {
-    setCredentials([...credentials, credential])
+    const updatedCredentials = [...credentials, credential]
+    setCredentials(updatedCredentials)
+    localStorage.setItem('jessCredentials', JSON.stringify(updatedCredentials))
     setSelectedCredential(credential)
     setIsDialogOpen(true)
   }
 
   const handleDeleteCredential = (idToDelete: string) => {
-    setCredentials(credentials.filter(c => c.id !== idToDelete))
+    const updatedCredentials = credentials.filter(c => c.id !== idToDelete)
+    setCredentials(updatedCredentials)
+    localStorage.setItem('jessCredentials', JSON.stringify(updatedCredentials))
   }
 
   const handleViewPDF = (credential: Credential) => {

@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -28,28 +27,53 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
   const [issue, setIssue] = useState("")
   const [expiry, setExpiry] = useState("")
   const [selectedOrganization, setSelectedOrganization] = useState("")
-  const [selectedVolumes, setSelectedVolumes] = useState<string[]>([])
+  const [volumesInput, setVolumesInput] = useState("")
   const [hideVolumes, setHideVolumes] = useState(false)
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString())
 
   const handleSetYearDates = () => {
-    const currentYear = new Date().getFullYear()
-    const startOfYear = `${currentYear}-01-01`
-    const endOfYear = `${currentYear}-12-31`
+    const year = parseInt(selectedYear)
+    const startOfYear = `${year}-01-01`
+    const endOfYear = `${year}-12-31`
     
     setDate(startOfYear)
     setExpiry(endOfYear)
   }
 
-  const handleVolumeChange = (volume: string, checked: boolean) => {
-    if (checked) {
-      setSelectedVolumes([...selectedVolumes, volume])
-    } else {
-      setSelectedVolumes(selectedVolumes.filter(v => v !== volume))
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear()
+    const years = []
+    for (let year = currentYear + 5; year >= currentYear - 20; year--) {
+      years.push(year.toString())
     }
+    return years
+  }
+
+  const parseVolumes = (input: string): string[] => {
+    if (!input.trim()) return []
+    
+    // Split by comma and clean up each volume
+    return input.split(',')
+      .map(vol => vol.trim())
+      .filter(vol => vol.length > 0)
+      .map(vol => {
+        // If it's just a number, format as "Volume X"
+        if (/^\d+$/.test(vol)) {
+          return `Volume ${vol}`
+        }
+        // If it already starts with "Volume", keep as is
+        if (vol.toLowerCase().startsWith('volume')) {
+          return vol
+        }
+        // Otherwise, prepend "Volume "
+        return `Volume ${vol}`
+      })
   }
 
   const handleGenerate = () => {
     const newId = uuidv4().split('-')[0]
+    const volumes = parseVolumes(volumesInput)
+    
     const newCredential = {
       id: newId,
       name,
@@ -58,7 +82,7 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
       date,
       issue,
       expiry,
-      volumes: hideVolumes ? [] : selectedVolumes,
+      volumes: hideVolumes ? [] : volumes,
       hideVolumes
     }
     
@@ -71,8 +95,9 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
     setIssue("")
     setExpiry("")
     setSelectedOrganization("")
-    setSelectedVolumes([])
+    setVolumesInput("")
     setHideVolumes(false)
+    setSelectedYear(new Date().getFullYear().toString())
   }
 
   return (
@@ -110,10 +135,23 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <h3 className="text-sm font-medium mb-2">Select Year</h3>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateYearOptions().map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button type="button" onClick={handleSetYearDates} variant="outline" className="flex items-center gap-2">
               <Calendar size={16} />
-              Set Current Year Dates
+              Set Year Dates
             </Button>
           </div>
 
@@ -131,21 +169,15 @@ export default function CredentialForm({ organizations, onCredentialGenerated }:
             
             {!hideVolumes && (
               <div>
-                <h3 className="text-sm font-medium mb-2">Select Volume(s)</h3>
-                <div className="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto border rounded p-2">
-                  {volumes.map(volume => (
-                    <div key={volume} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={volume}
-                        checked={selectedVolumes.includes(volume)}
-                        onCheckedChange={(checked) => handleVolumeChange(volume, checked === true)}
-                      />
-                      <label htmlFor={volume} className="text-xs">
-                        {volume}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-sm font-medium mb-2">Volume(s)</h3>
+                <Input 
+                  placeholder="Enter volumes (e.g., 1, 2, 3 or Volume 1, Volume 2)" 
+                  value={volumesInput} 
+                  onChange={e => setVolumesInput(e.target.value)}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Separate multiple volumes with commas. Numbers will be formatted as "Volume X"
+                </p>
               </div>
             )}
           </div>
