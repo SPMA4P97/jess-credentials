@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -211,12 +210,11 @@ export default function UserManagement({
         </div>
       </div>
 
-      {pdfCredential && (
-        <PDFViewer 
-          credential={pdfCredential}
-          onClose={() => setPdfCredential(null)}
-        />
-      )}
+      <PDFViewer 
+        credential={pdfCredential}
+        isOpen={!!pdfCredential}
+        onClose={() => setPdfCredential(null)}
+      />
     </div>
   )
 }
