@@ -1,20 +1,19 @@
-
-
 // Lovable-compatible React app with credential generation, public viewer, login gating, and credential table
 
 import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useSearchParams } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
 import { format } from 'date-fns'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff } from 'lucide-react'
+import CredentialForm from '@/components/CredentialForm'
+import CredentialsList from '@/components/CredentialsList'
+import CredentialResultDialog from '@/components/CredentialResultDialog'
 
 interface User {
   id: string
@@ -22,6 +21,16 @@ interface User {
   password: string
   role: 'admin' | 'user'
   createdAt: string
+}
+
+interface Credential {
+  id: string
+  name: string
+  role: string
+  organization: string
+  date: string
+  issue: string
+  expiry: string
 }
 
 function CredentialViewer({ id }) {
@@ -334,35 +343,19 @@ export default function CredentialApp() {
     "Medical Research Quarterly",
     "Tech Innovation Today"
   ])
-  const [name, setName] = useState("")
-  const [role, setRole] = useState("")
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [issue, setIssue] = useState("")
-  const [expiry, setExpiry] = useState("")
-  const [selectedOrganization, setSelectedOrganization] = useState("")
-  const [submitted, setSubmitted] = useState(false)
-  const [credentialId, setCredentialId] = useState("")
-  const [credentials, setCredentials] = useState([])
+  const [credentials, setCredentials] = useState<Credential[]>([])
+  const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchParams] = useSearchParams()
   const credentialFromURL = searchParams.get('credentialId')
 
-  const handleGenerate = () => {
-    const newId = uuidv4().split('-')[0]
-    const newCredential = {
-      id: newId,
-      name,
-      role,
-      organization: selectedOrganization,
-      date,
-      issue,
-      expiry
-    }
-    setCredentials([...credentials, newCredential])
-    setCredentialId(newId)
-    setSubmitted(true)
+  const handleCredentialGenerated = (credential: Credential) => {
+    setCredentials([...credentials, credential])
+    setSelectedCredential(credential)
+    setIsDialogOpen(true)
   }
 
-  const handleDelete = (idToDelete) => {
+  const handleDeleteCredential = (idToDelete: string) => {
     setCredentials(credentials.filter(c => c.id !== idToDelete))
   }
 
@@ -390,103 +383,25 @@ export default function CredentialApp() {
         </div>
       </div>
 
-      <Tabs defaultValue="credentials" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="credentials">Credential Generator</TabsTrigger>
+      <Tabs defaultValue="generator" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="generator">Credential Generator</TabsTrigger>
+          <TabsTrigger value="credentials">All Credentials</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
         </TabsList>
         
+        <TabsContent value="generator" className="space-y-6">
+          <CredentialForm 
+            organizations={organizations}
+            onCredentialGenerated={handleCredentialGenerated}
+          />
+        </TabsContent>
+
         <TabsContent value="credentials" className="space-y-6">
-          <Card>
-            <CardContent className="space-y-4">
-              <h2 className="text-xl font-semibold">Credential Generator</h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Issuing Organization</label>
-                  <Select value={selectedOrganization} onValueChange={setSelectedOrganization}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an organization" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {organizations.map(org => (
-                        <SelectItem key={org} value={org}>{org}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Input placeholder="Recipient Name" value={name} onChange={e => setName(e.target.value)} />
-                <Input placeholder="Role (e.g., Peer Reviewer)" value={role} onChange={e => setRole(e.target.value)} />
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">Issue Date</label>
-                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">Expiration Date</label>
-                  <Input type="date" placeholder="Expiry Date (optional)" value={expiry} onChange={e => setExpiry(e.target.value)} />
-                </div>
-                
-                <Textarea placeholder="Journal Issue or Description" value={issue} onChange={e => setIssue(e.target.value)} />
-              </div>
-
-              <Button onClick={handleGenerate}>Generate Credential</Button>
-            </CardContent>
-          </Card>
-
-          {submitted && (
-            <Card>
-              <CardContent className="space-y-4">
-                <h3 className="text-lg font-semibold">Credential Generated</h3>
-                <p><strong>Organization:</strong> {selectedOrganization}</p>
-                <p><strong>Name:</strong> {name}</p>
-                <p><strong>Role:</strong> {role}</p>
-                <p><strong>Issue Date:</strong> {date}</p>
-                <p><strong>Expiration Date:</strong> {expiry || 'None'}</p>
-                <p><strong>Journal Info:</strong> {issue}</p>
-                <p><strong>Credential ID:</strong> {credentialId}</p>
-                <p><strong>Credential URL:</strong> https://yourjournal.org/credentials/{credentialId}</p>
-              </CardContent>
-            </Card>
-          )}
-
-          {credentials.length > 0 && (
-            <Card>
-              <CardContent className="space-y-4">
-                <h3 className="text-lg font-semibold">All Credentials</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableCell>Organization</TableCell>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Role</TableCell>
-                      <TableCell>Issue Date</TableCell>
-                      <TableCell>Expiry</TableCell>
-                      <TableCell>ID</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {credentials.map(c => (
-                      <TableRow key={c.id}>
-                        <TableCell>{c.organization || '—'}</TableCell>
-                        <TableCell>{c.name}</TableCell>
-                        <TableCell>{c.role}</TableCell>
-                        <TableCell>{c.date}</TableCell>
-                        <TableCell>{c.expiry || '—'}</TableCell>
-                        <TableCell>{c.id}</TableCell>
-                        <TableCell>
-                          <Button onClick={() => handleDelete(c.id)} variant="destructive">Remove</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
+          <CredentialsList 
+            credentials={credentials}
+            onDelete={handleDeleteCredential}
+          />
         </TabsContent>
         
         <TabsContent value="users">
@@ -499,7 +414,12 @@ export default function CredentialApp() {
           />
         </TabsContent>
       </Tabs>
+
+      <CredentialResultDialog
+        credential={selectedCredential}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+      />
     </div>
   )
 }
-
