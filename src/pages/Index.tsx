@@ -40,7 +40,7 @@ function Login({ onLogin }) {
   return (
     <Card className="max-w-md mx-auto mt-10">
       <CardContent className="space-y-4">
-        <h2 className="text-xl font-semibold">Admin Login</h2>
+        <h2 className="text-xl font-semibold">JESS Admin Login</h2>
         <Input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
         <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
         <Button onClick={handleLogin}>Login</Button>
