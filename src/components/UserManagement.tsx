@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button"
 import { LogOut } from 'lucide-react'
 import NavigationTabs from './NavigationTabs'
 import CredentialsTab from './CredentialsTab'
+import AllCredentialsTab from './AllCredentialsTab'
 import UsersTab from './UsersTab'
 import SettingsTab from './SettingsTab'
 import PDFViewer from './PDFViewer'
+import CredentialResultDialog from './CredentialResultDialog'
 
 interface User {
   id: string
@@ -48,12 +50,13 @@ export default function UserManagement({
   roles, 
   setRoles 
 }: UserManagementProps) {
-  const [activeTab, setActiveTab] = useState<'credentials' | 'users' | 'settings'>('credentials')
+  const [activeTab, setActiveTab] = useState<'credentials' | 'all-credentials' | 'users' | 'settings'>('credentials')
   const [credentials, setCredentials] = useState<Credential[]>(() => {
     const saved = localStorage.getItem('jessCredentials')
     return saved ? JSON.parse(saved) : []
   })
   const [pdfCredential, setPdfCredential] = useState<Credential | null>(null)
+  const [newCredential, setNewCredential] = useState<Credential | null>(null)
 
   const handleLogout = () => {
     localStorage.removeItem('jessCredentialsAuth')
@@ -64,6 +67,7 @@ export default function UserManagement({
     const updatedCredentials = [...credentials, credential]
     setCredentials(updatedCredentials)
     localStorage.setItem('jessCredentials', JSON.stringify(updatedCredentials))
+    setNewCredential(credential)
   }
 
   const handleDeleteCredential = (id: string) => {
@@ -106,8 +110,13 @@ export default function UserManagement({
             <CredentialsTab
               organizations={organizations}
               roles={roles}
-              credentials={credentials}
               onCredentialGenerated={handleCredentialGenerated}
+            />
+          )}
+
+          {activeTab === 'all-credentials' && (
+            <AllCredentialsTab
+              credentials={credentials}
               onDeleteCredential={handleDeleteCredential}
               onViewPDF={handleViewPDF}
             />
@@ -136,6 +145,13 @@ export default function UserManagement({
         credential={pdfCredential}
         isOpen={!!pdfCredential}
         onClose={() => setPdfCredential(null)}
+      />
+
+      <CredentialResultDialog
+        credential={newCredential}
+        isOpen={!!newCredential}
+        onClose={() => setNewCredential(null)}
+        onViewPDF={handleViewPDF}
       />
     </div>
   )

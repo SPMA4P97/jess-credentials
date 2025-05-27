@@ -1,10 +1,10 @@
 
 import { Button } from "@/components/ui/button"
-import { FileText, Users, Settings } from 'lucide-react'
+import { FileText, Users, Settings, List } from 'lucide-react'
 
 interface NavigationTabsProps {
-  activeTab: 'credentials' | 'users' | 'settings'
-  setActiveTab: (tab: 'credentials' | 'users' | 'settings') => void
+  activeTab: 'credentials' | 'all-credentials' | 'users' | 'settings'
+  setActiveTab: (tab: 'credentials' | 'all-credentials' | 'users' | 'settings') => void
   isAdmin: boolean
 }
 
@@ -18,7 +18,15 @@ export default function NavigationTabs({ activeTab, setActiveTab, isAdmin }: Nav
           className="flex items-center gap-2"
         >
           <FileText size={16} />
-          Credentials
+          Create Credential
+        </Button>
+        <Button
+          variant={activeTab === 'all-credentials' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('all-credentials')}
+          className="flex items-center gap-2"
+        >
+          <List size={16} />
+          All Credentials
         </Button>
         {isAdmin && (
           <>
