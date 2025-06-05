@@ -67,7 +67,7 @@ export default function UsersTab({ users, setUsers, currentUser }: UsersTabProps
             email: data[0].email || '',
             username: data[0].username,
             password: data[0].password,
-            role: data[0].role,
+            role: (data[0].role === 'admin' || data[0].role === 'user') ? data[0].role : 'user',
             createdAt: data[0].created || new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0].slice(0, 5)
           }
           
