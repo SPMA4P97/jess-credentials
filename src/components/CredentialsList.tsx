@@ -2,7 +2,8 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { FileText, ExternalLink } from 'lucide-react'
+import { FileText, ExternalLink, Copy } from 'lucide-react'
+import { useToast } from "@/hooks/use-toast"
 
 interface SupabaseCredential {
   id: string
@@ -23,6 +24,8 @@ interface CredentialsListProps {
 }
 
 export default function CredentialsList({ credentials, onDelete, onViewPDF }: CredentialsListProps) {
+  const { toast } = useToast()
+
   if (credentials.length === 0) {
     return (
       <Card>
@@ -35,6 +38,21 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
 
   const getPublicCredentialUrl = (credentialId: string) => {
     return `${window.location.origin}/credential/${credentialId}`
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Copied!",
+        description: "ID copied to clipboard.",
+      })
+    }).catch(() => {
+      toast({
+        title: "Error",
+        description: "Failed to copy to clipboard.",
+        variant: "destructive"
+      })
+    })
   }
 
   return (
@@ -84,7 +102,19 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
                       View Public
                     </a>
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{c.id}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs">{c.id}</span>
+                      <Button 
+                        onClick={() => copyToClipboard(c.id)} 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                      >
+                        <Copy size={12} />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       {c.public_credential_url && (

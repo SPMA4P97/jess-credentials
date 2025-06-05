@@ -6,8 +6,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ArrowLeft } from 'lucide-react'
 import CredentialSearchForm from './CredentialSearchForm'
 import CredentialDisplay from './CredentialDisplay'
-import { searchCredential } from '../utils/credentialSearch'
-import { generateCredentialPDF } from '../utils/pdfGenerator'
+import { fetchCredentialByIdFromSupabase } from '../utils/supabaseAPI'
 
 interface Credential {
   id: string
@@ -21,6 +20,18 @@ interface Credential {
   hideVolumes?: boolean
 }
 
+interface SupabaseCredential {
+  id: string
+  name: string
+  role: string
+  organization_name: string
+  issue_date: string
+  info: string
+  expiry_date: string
+  volumes: string
+  public_credential_url: string
+}
+
 interface PublicCredentialViewerProps {
   onBack: () => void
 }
@@ -30,30 +41,62 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
   const [error, setError] = useState("")
   const { toast } = useToast()
 
-  const handleSearch = (credentialId: string, lastName: string) => {
-    const credential = searchCredential(credentialId, lastName)
-    
-    if (credential) {
-      setFoundCredential(credential)
-      setError("")
-      toast({
-        title: "Credential found",
-        description: "Your credential has been located successfully.",
-      })
-    } else {
-      const hasCredentials = localStorage.getItem('jessCredentials') || sessionStorage.getItem('jessCredentials')
-      if (hasCredentials) {
-        setError("Credential not found. Please check your ID and last name.")
+  const handleSearch = async (credentialId: string, lastName: string) => {
+    if (!credentialId.trim() || !lastName.trim()) {
+      setError("Please enter both credential ID and last name.")
+      setFoundCredential(null)
+      return
+    }
+
+    try {
+      // Fetch from Supabase instead of localStorage
+      const supabaseCredential: SupabaseCredential | null = await fetchCredentialByIdFromSupabase(credentialId)
+      
+      if (supabaseCredential) {
+        // Check if the last name matches (case insensitive)
+        if (supabaseCredential.name.toLowerCase().includes(lastName.toLowerCase())) {
+          // Convert Supabase credential to local format
+          const credential: Credential = {
+            id: supabaseCredential.id,
+            name: supabaseCredential.name,
+            role: supabaseCredential.role,
+            organization: supabaseCredential.organization_name,
+            date: supabaseCredential.issue_date,
+            issue: supabaseCredential.info,
+            expiry: supabaseCredential.expiry_date,
+            volumes: supabaseCredential.volumes ? supabaseCredential.volumes.split(', ').filter(Boolean) : []
+          }
+          
+          setFoundCredential(credential)
+          setError("")
+          toast({
+            title: "Credential found",
+            description: "Your credential has been located successfully.",
+          })
+          
+          // Redirect to the public credential page
+          const publicUrl = `/credential/${credentialId}`
+          window.open(publicUrl, '_blank')
+        } else {
+          setError("Credential ID found but last name doesn't match.")
+          setFoundCredential(null)
+        }
       } else {
-        setError("No credentials found in the system. Credentials may have been created on a different browser or device.")
+        setError("Credential not found. Please check your ID and last name.")
+        setFoundCredential(null)
       }
+    } catch (err) {
+      console.error('Error searching credential:', err)
+      setError("Error searching for credential. Please try again.")
       setFoundCredential(null)
     }
   }
 
   const handleViewPDF = () => {
     if (foundCredential) {
-      generateCredentialPDF(foundCredential)
+      // Redirect to public credential page which has the PDF link
+      const publicUrl = `/credential/${foundCredential.id}`
+      window.open(publicUrl, '_blank')
     }
   }
 
@@ -78,10 +121,13 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
           )}
 
           {foundCredential && (
-            <CredentialDisplay 
-              credential={foundCredential} 
-              onViewPDF={handleViewPDF} 
-            />
+            <div className="text-center space-y-4">
+              <p className="text-green-600 text-sm">Credential found! Opening in new tab...</p>
+              <CredentialDisplay 
+                credential={foundCredential} 
+                onViewPDF={handleViewPDF} 
+              />
+            </div>
           )}
         </CardContent>
       </Card>
