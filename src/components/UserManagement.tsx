@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { LogOut } from 'lucide-react'
@@ -116,8 +115,6 @@ export default function UserManagement({
 
           {activeTab === 'all-credentials' && (
             <AllCredentialsTab
-              credentials={credentials}
-              onDeleteCredential={handleDeleteCredential}
               onViewPDF={handleViewPDF}
             />
           )}

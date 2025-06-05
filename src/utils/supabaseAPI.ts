@@ -37,3 +37,73 @@ export const createCredentialInSupabase = async (credentialData: {
     return false
   }
 }
+
+export const fetchAllCredentialsFromSupabase = async () => {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/credentials?select=*`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch credentials: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log('Credentials fetched from Supabase:', data)
+    return data
+  } catch (error) {
+    console.error('Error fetching credentials from Supabase:', error)
+    return []
+  }
+}
+
+export const deleteCredentialFromSupabase = async (id: string) => {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/credentials?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete credential: ${response.statusText}`)
+    }
+
+    console.log('Credential successfully deleted from Supabase')
+    return true
+  } catch (error) {
+    console.error('Error deleting credential from Supabase:', error)
+    return false
+  }
+}
+
+export const fetchCredentialByIdFromSupabase = async (id: string) => {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/credentials?id=eq.${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch credential: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.length > 0 ? data[0] : null
+  } catch (error) {
+    console.error('Error fetching credential from Supabase:', error)
+    return null
+  }
+}
