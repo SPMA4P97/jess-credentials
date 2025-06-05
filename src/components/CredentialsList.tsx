@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { FileText, ExternalLink, Copy } from 'lucide-react'
+import { ExternalLink, Copy } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 
 interface SupabaseCredential {
@@ -23,7 +23,7 @@ interface CredentialsListProps {
   onViewPDF: (credential: SupabaseCredential) => void
 }
 
-export default function CredentialsList({ credentials, onDelete, onViewPDF }: CredentialsListProps) {
+export default function CredentialsList({ credentials, onDelete }: CredentialsListProps) {
   const { toast } = useToast()
 
   if (credentials.length === 0) {
@@ -53,6 +53,11 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
         variant: "destructive"
       })
     })
+  }
+
+  const handleViewPublic = (credentialId: string) => {
+    const publicUrl = getPublicCredentialUrl(credentialId)
+    window.open(publicUrl, '_blank')
   }
 
   return (
@@ -92,15 +97,15 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
                     </div>
                   </TableCell>
                   <TableCell>
-                    <a 
-                      href={getPublicCredentialUrl(c.id)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                    <Button 
+                      onClick={() => handleViewPublic(c.id)}
+                      variant="outline" 
+                      size="sm"
+                      className="flex items-center gap-1"
                     >
                       <ExternalLink size={12} />
                       View Public
-                    </a>
+                    </Button>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -116,22 +121,9 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      {c.public_credential_url && (
-                        <Button 
-                          onClick={() => onViewPDF(c)} 
-                          variant="outline" 
-                          size="sm"
-                          className="flex items-center gap-1"
-                        >
-                          <FileText size={14} />
-                          PDF
-                        </Button>
-                      )}
-                      <Button onClick={() => onDelete(c.id)} variant="destructive" size="sm">
-                        Delete
-                      </Button>
-                    </div>
+                    <Button onClick={() => onDelete(c.id)} variant="destructive" size="sm">
+                      Delete
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

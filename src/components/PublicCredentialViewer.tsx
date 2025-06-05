@@ -73,10 +73,6 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
             title: "Credential found",
             description: "Your credential has been located successfully.",
           })
-          
-          // Redirect to the public credential page
-          const publicUrl = `/credential/${credentialId}`
-          window.open(publicUrl, '_blank')
         } else {
           setError("Credential ID found but last name doesn't match.")
           setFoundCredential(null)
@@ -89,6 +85,14 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
       console.error('Error searching credential:', err)
       setError("Error searching for credential. Please try again.")
       setFoundCredential(null)
+    }
+  }
+
+  const handleViewPublicPage = () => {
+    if (foundCredential) {
+      // Redirect to public credential page 
+      const publicUrl = `/credential/${foundCredential.id}`
+      window.open(publicUrl, '_blank')
     }
   }
 
@@ -122,11 +126,19 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
 
           {foundCredential && (
             <div className="text-center space-y-4">
-              <p className="text-green-600 text-sm">Credential found! Opening in new tab...</p>
+              <p className="text-green-600 text-sm">Credential found!</p>
               <CredentialDisplay 
                 credential={foundCredential} 
                 onViewPDF={handleViewPDF} 
               />
+              <div className="flex gap-2 justify-center">
+                <Button onClick={handleViewPublicPage} variant="outline">
+                  View Public Page
+                </Button>
+                <Button onClick={handleViewPDF}>
+                  View PDF
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
