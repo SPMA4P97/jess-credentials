@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -31,9 +30,30 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
   const { toast } = useToast()
 
   const handleSearch = () => {
+    // Try to get credentials from localStorage first
+    let credentials: Credential[] = []
     const saved = localStorage.getItem('jessCredentials')
     if (saved) {
-      const credentials: Credential[] = JSON.parse(saved)
+      try {
+        credentials = JSON.parse(saved)
+      } catch (e) {
+        console.error('Error parsing localStorage credentials:', e)
+      }
+    }
+
+    // Also try to get from sessionStorage as backup
+    const sessionSaved = sessionStorage.getItem('jessCredentials')
+    if (sessionSaved && credentials.length === 0) {
+      try {
+        credentials = JSON.parse(sessionSaved)
+      } catch (e) {
+        console.error('Error parsing sessionStorage credentials:', e)
+      }
+    }
+
+    console.log('Available credentials:', credentials.length)
+    
+    if (credentials.length > 0) {
       const credential = credentials.find(c => 
         c.id === credentialId && 
         c.name.toLowerCase().includes(lastName.toLowerCase())
@@ -51,7 +71,7 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
         setFoundCredential(null)
       }
     } else {
-      setError("No credentials found in the system.")
+      setError("No credentials found in the system. Credentials may have been created on a different browser or device.")
       setFoundCredential(null)
     }
   }
@@ -79,10 +99,10 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
             .content { text-align: center; font-size: 18px; line-height: 1.6; }
             .recipient-name { font-size: 42px; font-weight: bold; color: #1e40af; border-bottom: 2px solid #d1d5db; padding-bottom: 15px; margin: 30px 0; }
             .role { font-size: 32px; font-weight: 600; color: #374151; margin: 30px 0; }
-            .dates { display: flex; justify-content: space-around; margin: 40px 0; font-size: 12px; }
+            .dates { display: flex; ${formattedExpiry ? 'justify-content: space-around' : 'justify-content: center'}; margin: 40px 0; font-size: 12px; }
             .date-box { border: 1px solid #d1d5db; padding: 10px; border-radius: 8px; }
             .credential-id { border-top: 3px solid #2563eb; padding-top: 20px; margin-top: 30px; font-size: 10px; }
-            .footer { border-top: 3px solid #2563eb; padding-top: 20px; margin-top: 30px; font-size: 10px; color: #6b7280; text-align: center; }
+            .footer { border-top: 3px solid #2563eb; padding-top: 20px; margin-top: 30px; font-size: 8px; color: #6b7280; text-align: center; }
             @media print { body { margin: 0; } }
           </style>
         </head>
@@ -114,7 +134,7 @@ export default function PublicCredentialViewer({ onBack }: PublicCredentialViewe
               <div class="credential-id">
                 <div style="font-weight: 600; color: #374151;">Credential ID</div>
                 <div style="font-family: monospace; font-size: 12px; font-weight: 600;">${foundCredential.id}</div>
-                <div style="font-size: 8px; color: #6b7280; margin-top: 5px;">
+                <div style="font-size: 6px; color: #6b7280; margin-top: 5px;">
                   Verify at: ${window.location.origin}/?credentialId=${foundCredential.id}
                 </div>
               </div>
