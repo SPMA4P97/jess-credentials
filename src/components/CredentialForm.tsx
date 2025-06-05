@@ -85,6 +85,7 @@ export default function CredentialForm({ organizations, roles, onCredentialGener
       id: newId,
       created_at: new Date().toISOString(),
       organization_name: selectedOrganization,
+      name: name, // Make sure name is included
       role: role,
       issue_date: date,
       expiry_date: expiry || null,
@@ -92,6 +93,8 @@ export default function CredentialForm({ organizations, roles, onCredentialGener
       info: issue,
       public_credential_url: `${window.location.origin}/credential/${newId}`
     }
+
+    console.log('Sending to Supabase:', supabaseData) // Debug log
 
     // Send to Supabase
     const supabaseSuccess = await createCredentialInSupabase(supabaseData)

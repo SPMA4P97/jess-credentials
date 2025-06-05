@@ -6,6 +6,7 @@ export const createCredentialInSupabase = async (credentialData: {
   id: string
   created_at: string
   organization_name: string
+  name: string
   role: string
   issue_date: string
   expiry_date: string
