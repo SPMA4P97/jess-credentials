@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import Login from './Login'
 import UserManagement from './UserManagement'
@@ -35,9 +36,15 @@ export default function Dashboard() {
           email: 'nlacoste@jessjournal.com',
           username: 'nlacoste',
           password: 'JESS2025',
-          role: 'user' as const,
+          role: 'admin' as const,
           createdAt: '2024-01-01 10:00'
         })
+      } else {
+        // Update existing nlacoste to admin if not already
+        const nlacostIndex = updatedUsers.findIndex((u: User) => u.username === 'nlacoste')
+        if (nlacostIndex !== -1) {
+          updatedUsers[nlacostIndex].role = 'admin'
+        }
       }
       if (!hasTmckee) {
         updatedUsers.push({
@@ -45,9 +52,15 @@ export default function Dashboard() {
           email: 'tmckee@jessjournal.com', 
           username: 'tmckee',
           password: 'JESS2025',
-          role: 'user' as const,
+          role: 'admin' as const,
           createdAt: '2024-01-01 10:00'
         })
+      } else {
+        // Update existing tmckee to admin if not already
+        const tmckeeIndex = updatedUsers.findIndex((u: User) => u.username === 'tmckee')
+        if (tmckeeIndex !== -1) {
+          updatedUsers[tmckeeIndex].role = 'admin'
+        }
       }
       
       // Save updated users back to localStorage
@@ -70,7 +83,7 @@ export default function Dashboard() {
         email: 'nlacoste@jessjournal.com',
         username: 'nlacoste',
         password: 'JESS2025',
-        role: 'user',
+        role: 'admin',
         createdAt: '2024-01-01 10:00'
       },
       {
@@ -78,7 +91,7 @@ export default function Dashboard() {
         email: 'tmckee@jessjournal.com',
         username: 'tmckee',
         password: 'JESS2025',
-        role: 'user',
+        role: 'admin',
         createdAt: '2024-01-01 10:00'
       }
     ]

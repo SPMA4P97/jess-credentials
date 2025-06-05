@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff } from 'lucide-react'
+import PublicCredentialViewer from './PublicCredentialViewer'
 
 interface User {
   id: string
@@ -24,6 +25,7 @@ export default function Login({ onLogin, users }: LoginProps) {
   const [emailOrUsername, setEmailOrUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [showCredentialViewer, setShowCredentialViewer] = useState(false)
   const { toast } = useToast()
 
   const handleLogin = () => {
@@ -50,6 +52,10 @@ export default function Login({ onLogin, users }: LoginProps) {
     if (e.key === 'Enter') {
       handleLogin()
     }
+  }
+
+  if (showCredentialViewer) {
+    return <PublicCredentialViewer onBack={() => setShowCredentialViewer(false)} />
   }
 
   return (
@@ -89,6 +95,17 @@ export default function Login({ onLogin, users }: LoginProps) {
               </Button>
             </div>
             <Button onClick={handleLogin} className="w-full">Access Portal</Button>
+          </div>
+
+          <div className="text-center pt-4 border-t">
+            <p className="text-sm text-gray-600 mb-2">Have a credential to view?</p>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowCredentialViewer(true)}
+              className="w-full"
+            >
+              View My Credential
+            </Button>
           </div>
         </CardContent>
       </Card>
