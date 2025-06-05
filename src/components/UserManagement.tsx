@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { LogOut } from 'lucide-react'
@@ -60,6 +59,7 @@ export default function UserManagement({
 
   const handleLogout = () => {
     localStorage.removeItem('jessCredentialsAuth')
+    localStorage.removeItem('jessCurrentUser')
     window.location.reload()
   }
 
@@ -88,7 +88,7 @@ export default function UserManagement({
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-blue-800">JESS Credentials Portal</h1>
-              <p className="text-gray-600">Welcome, {currentUser.email}</p>
+              <p className="text-gray-600">Welcome, {currentUser.username}</p>
             </div>
             <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2">
               <LogOut size={16} />

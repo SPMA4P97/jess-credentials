@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -66,13 +65,13 @@ export default function Login({ onLogin, users }: LoginProps) {
           id: user.id
         }))
 
-        // Convert Supabase user format to expected format
+        // Convert Supabase user format to expected format with proper role typing
         const formattedUser: User = {
           id: user.id,
           email: user.email,
           username: user.username,
           password: user.password,
-          role: user.role,
+          role: (user.role === 'admin' || user.role === 'user') ? user.role : 'user',
           createdAt: user.created || new Date().toISOString()
         }
 
