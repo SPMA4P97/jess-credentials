@@ -27,6 +27,8 @@ export default function Dashboard() {
       // Check if permanent accounts already exist
       const hasNlacoste = existingUsers.some((u: User) => u.username === 'nlacoste')
       const hasTmckee = existingUsers.some((u: User) => u.username === 'tmckee')
+      const hasMotterbein = existingUsers.some((u: User) => u.username === 'motterbein')
+      const hasMhibbeln = existingUsers.some((u: User) => u.username === 'mhibbeln')
       
       // Add missing permanent accounts
       const updatedUsers = [...existingUsers]
@@ -62,6 +64,38 @@ export default function Dashboard() {
           updatedUsers[tmckeeIndex].role = 'admin'
         }
       }
+      if (!hasMotterbein) {
+        updatedUsers.push({
+          id: 'motterbein-permanent',
+          email: 'motterbein@jessjournal.com',
+          username: 'motterbein',
+          password: 'JESS2025',
+          role: 'admin' as const,
+          createdAt: '2024-01-01 10:00'
+        })
+      } else {
+        // Update existing motterbein to admin if not already
+        const motterbeinIndex = updatedUsers.findIndex((u: User) => u.username === 'motterbein')
+        if (motterbeinIndex !== -1) {
+          updatedUsers[motterbeinIndex].role = 'admin'
+        }
+      }
+      if (!hasMhibbeln) {
+        updatedUsers.push({
+          id: 'mhibbeln-permanent',
+          email: 'mhibbeln@jessjournal.com',
+          username: 'mhibbeln',
+          password: 'JESS2025',
+          role: 'admin' as const,
+          createdAt: '2024-01-01 10:00'
+        })
+      } else {
+        // Update existing mhibbeln to admin if not already
+        const mhibbelnIndex = updatedUsers.findIndex((u: User) => u.username === 'mhibbeln')
+        if (mhibbelnIndex !== -1) {
+          updatedUsers[mhibbelnIndex].role = 'admin'
+        }
+      }
       
       // Save updated users back to localStorage
       localStorage.setItem('jessUsers', JSON.stringify(updatedUsers))
@@ -90,6 +124,22 @@ export default function Dashboard() {
         id: 'tmckee-permanent',
         email: 'tmckee@jessjournal.com',
         username: 'tmckee',
+        password: 'JESS2025',
+        role: 'admin',
+        createdAt: '2024-01-01 10:00'
+      },
+      {
+        id: 'motterbein-permanent',
+        email: 'motterbein@jessjournal.com',
+        username: 'motterbein',
+        password: 'JESS2025',
+        role: 'admin',
+        createdAt: '2024-01-01 10:00'
+      },
+      {
+        id: 'mhibbeln-permanent',
+        email: 'mhibbeln@jessjournal.com',
+        username: 'mhibbeln',
         password: 'JESS2025',
         role: 'admin',
         createdAt: '2024-01-01 10:00'
