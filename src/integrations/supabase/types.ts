@@ -90,6 +90,33 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          created: string | null
+          email: string | null
+          id: string
+          password: string
+          role: string | null
+          username: string
+        }
+        Insert: {
+          created?: string | null
+          email?: string | null
+          id?: string
+          password: string
+          role?: string | null
+          username: string
+        }
+        Update: {
+          created?: string | null
+          email?: string | null
+          id?: string
+          password?: string
+          role?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

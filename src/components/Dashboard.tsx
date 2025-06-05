@@ -1,5 +1,5 @@
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Login from './Login'
 import UserManagement from './UserManagement'
 
@@ -17,7 +17,10 @@ export default function Dashboard() {
     return localStorage.getItem('jessCredentialsAuth') === 'true'
   })
 
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('jessCurrentUser')
+    return savedUser ? JSON.parse(savedUser) : null
+  })
 
   // Initialize users from localStorage or with default users including permanent accounts
   const [users, setUsers] = useState<User[]>(() => {
@@ -175,7 +178,22 @@ export default function Dashboard() {
     setCurrentUser(user)
     setIsLoggedIn(true)
     localStorage.setItem('jessCredentialsAuth', 'true')
+    localStorage.setItem('jessCurrentUser', JSON.stringify(user))
   }
+
+  // Check authentication state on component mount
+  useEffect(() => {
+    const authState = localStorage.getItem('jessCredentialsAuth')
+    const savedUser = localStorage.getItem('jessCurrentUser')
+    
+    if (authState === 'true' && savedUser) {
+      setIsLoggedIn(true)
+      setCurrentUser(JSON.parse(savedUser))
+    } else {
+      setIsLoggedIn(false)
+      setCurrentUser(null)
+    }
+  }, [])
 
   if (!isLoggedIn || !currentUser) {
     return <Login onLogin={handleLogin} users={users} />

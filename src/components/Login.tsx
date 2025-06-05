@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff } from 'lucide-react'
 import PublicCredentialViewer from './PublicCredentialViewer'
+import { supabase } from "@/integrations/supabase/client"
 
 interface User {
   id: string
@@ -26,26 +27,77 @@ export default function Login({ onLogin, users }: LoginProps) {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showCredentialViewer, setShowCredentialViewer] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
-  const handleLogin = () => {
-    const user = users.find(u => 
-      (u.email === emailOrUsername || u.username === emailOrUsername) && 
-      u.password === password
-    )
-    if (user) {
-      onLogin(user)
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.email}!`,
-      })
-    } else {
+  const handleLogin = async () => {
+    setIsLoading(true)
+    
+    try {
+      // Fetch users from Supabase
+      const { data: supabaseUsers, error } = await supabase
+        .from('users')
+        .select('*')
+      
+      if (error) {
+        console.error('Error fetching users:', error)
+        toast({
+          title: "Login failed",
+          description: "Unable to connect to user database",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
+      // Check credentials against Supabase users
+      const user = supabaseUsers?.find(u => 
+        (u.email === emailOrUsername || u.username === emailOrUsername) && 
+        u.password === password
+      )
+
+      if (user) {
+        // Store user info in localStorage for session management
+        localStorage.setItem('jessCredentialsAuth', 'true')
+        localStorage.setItem('jessCurrentUser', JSON.stringify({
+          username: user.username,
+          role: user.role,
+          email: user.email,
+          id: user.id
+        }))
+
+        // Convert Supabase user format to expected format
+        const formattedUser: User = {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          password: user.password,
+          role: user.role,
+          createdAt: user.created || new Date().toISOString()
+        }
+
+        onLogin(formattedUser)
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${user.username}!`,
+        })
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Invalid username or password",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Login error:', error)
       toast({
         title: "Login failed",
-        description: "Invalid email/username or password",
+        description: "An error occurred during login",
         variant: "destructive",
       })
     }
+    
+    setIsLoading(false)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -74,6 +126,7 @@ export default function Login({ onLogin, users }: LoginProps) {
               onChange={e => setEmailOrUsername(e.target.value)}
               onKeyPress={handleKeyPress}
               className="text-center"
+              disabled={isLoading}
             />
             <div className="relative">
               <Input 
@@ -83,6 +136,7 @@ export default function Login({ onLogin, users }: LoginProps) {
                 onChange={e => setPassword(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="text-center"
+                disabled={isLoading}
               />
               <Button
                 type="button"
@@ -90,11 +144,18 @@ export default function Login({ onLogin, users }: LoginProps) {
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
-            <Button onClick={handleLogin} className="w-full">Access Portal</Button>
+            <Button 
+              onClick={handleLogin} 
+              className="w-full" 
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in..." : "Access Portal"}
+            </Button>
           </div>
 
           <div className="text-center pt-4 border-t">
@@ -103,6 +164,7 @@ export default function Login({ onLogin, users }: LoginProps) {
               variant="outline" 
               onClick={() => setShowCredentialViewer(true)}
               className="w-full"
+              disabled={isLoading}
             >
               View My Credential
             </Button>
