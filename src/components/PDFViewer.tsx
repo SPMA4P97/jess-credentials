@@ -45,12 +45,12 @@ export default function PDFViewer({ credential, isOpen, onClose }: PDFViewerProp
             .org-name { font-size: 36px; font-weight: bold; color: #1e40af; margin-bottom: 10px; }
             .cert-title { font-size: 24px; font-weight: 600; color: #374151; }
             .content { text-align: center; font-size: 18px; line-height: 1.6; }
-            .recipient-name { font-size: 32px; font-weight: bold; color: #1e40af; border-bottom: 2px solid #d1d5db; padding-bottom: 10px; margin: 20px 0; }
-            .role { font-size: 24px; font-weight: 600; color: #374151; margin: 20px 0; }
-            .dates { display: flex; justify-content: space-around; margin: 40px 0; font-size: 14px; }
-            .date-box { border: 1px solid #d1d5db; padding: 15px; border-radius: 8px; }
-            .credential-id { border-top: 3px solid #2563eb; padding-top: 30px; margin-top: 40px; }
-            .footer { border-top: 3px solid #2563eb; padding-top: 30px; margin-top: 40px; font-size: 12px; color: #6b7280; text-align: center; }
+            .recipient-name { font-size: 42px; font-weight: bold; color: #1e40af; border-bottom: 2px solid #d1d5db; padding-bottom: 15px; margin: 30px 0; }
+            .role { font-size: 32px; font-weight: 600; color: #374151; margin: 30px 0; }
+            .dates { display: flex; justify-content: space-around; margin: 40px 0; font-size: 12px; }
+            .date-box { border: 1px solid #d1d5db; padding: 10px; border-radius: 8px; }
+            .credential-id { border-top: 3px solid #2563eb; padding-top: 20px; margin-top: 30px; font-size: 10px; }
+            .footer { border-top: 3px solid #2563eb; padding-top: 20px; margin-top: 30px; font-size: 10px; color: #6b7280; text-align: center; }
             @media print { body { margin: 0; } }
           </style>
         </head>
@@ -65,24 +65,24 @@ export default function PDFViewer({ credential, isOpen, onClose }: PDFViewerProp
               <div class="recipient-name">${credential.name}</div>
               <p>has successfully served as</p>
               <div class="role">${credential.role}</div>
-              ${credential.issue ? `<p style="color: #374151; margin: 20px 0;">${credential.issue}</p>` : ''}
+              ${credential.issue ? `<p style="color: #374151; margin: 20px 0; font-size: 16px;">${credential.issue}</p>` : ''}
               ${!credential.hideVolumes && credential.volumes && credential.volumes.length > 0 ? 
-                `<p style="color: #374151; margin: 20px 0;">Contributing to: ${credential.volumes.join(', ')}</p>` : ''}
+                `<p style="color: #374151; margin: 20px 0; font-size: 16px;">Contributing to: ${credential.volumes.join(', ')}</p>` : ''}
               <div class="dates">
                 <div class="date-box">
                   <div style="font-weight: 600; color: #374151;">Issue Date</div>
-                  <div style="font-size: 18px;">${formattedDate}</div>
+                  <div style="font-size: 14px;">${formattedDate}</div>
                 </div>
                 ${formattedExpiry ? `
                 <div class="date-box">
                   <div style="font-weight: 600; color: #374151;">Expiration Date</div>
-                  <div style="font-size: 18px;">${formattedExpiry}</div>
+                  <div style="font-size: 14px;">${formattedExpiry}</div>
                 </div>` : ''}
               </div>
               <div class="credential-id">
-                <div style="font-weight: 600; color: #374151; font-size: 14px;">Credential ID</div>
-                <div style="font-family: monospace; font-size: 18px; font-weight: 600;">${credential.id}</div>
-                <div style="font-size: 12px; color: #6b7280; margin-top: 10px;">
+                <div style="font-weight: 600; color: #374151;">Credential ID</div>
+                <div style="font-family: monospace; font-size: 12px; font-weight: 600;">${credential.id}</div>
+                <div style="font-size: 8px; color: #6b7280; margin-top: 5px;">
                   Verify at: ${window.location.origin}/?credentialId=${credential.id}
                 </div>
               </div>
@@ -131,11 +131,11 @@ export default function PDFViewer({ credential, isOpen, onClose }: PDFViewerProp
               <div className="space-y-6">
                 <div className="text-lg">
                   <p className="mb-4">This is to certify that</p>
-                  <p className="text-2xl font-bold text-blue-800 border-b border-gray-300 pb-2 mb-4">
+                  <p className="text-4xl font-bold text-blue-800 border-b border-gray-300 pb-3 mb-6">
                     {credential.name}
                   </p>
                   <p className="mb-4">has successfully served as</p>
-                  <p className="text-xl font-semibold text-gray-800 mb-4">
+                  <p className="text-2xl font-semibold text-gray-800 mb-6">
                     {credential.role}
                   </p>
                   
@@ -153,32 +153,32 @@ export default function PDFViewer({ credential, isOpen, onClose }: PDFViewerProp
                 </div>
 
                 {/* Dates */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="border rounded p-3">
-                    <p className="font-semibold text-gray-600">Issue Date</p>
-                    <p className="text-lg">{formattedDate}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="border rounded p-2">
+                    <p className="font-semibold text-gray-600 text-xs">Issue Date</p>
+                    <p className="text-sm">{formattedDate}</p>
                   </div>
                   
                   {formattedExpiry && (
-                    <div className="border rounded p-3">
-                      <p className="font-semibold text-gray-600">Expiration Date</p>
-                      <p className="text-lg">{formattedExpiry}</p>
+                    <div className="border rounded p-2">
+                      <p className="font-semibold text-gray-600 text-xs">Expiration Date</p>
+                      <p className="text-sm">{formattedExpiry}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Credential ID */}
-                <div className="border-t pt-4">
-                  <p className="text-sm text-gray-600">Credential ID</p>
-                  <p className="font-mono text-lg font-semibold">{credential.id}</p>
-                  <p className="text-xs text-gray-500 mt-2">
+                <div className="border-t pt-3">
+                  <p className="text-xs text-gray-600">Credential ID</p>
+                  <p className="font-mono text-sm font-semibold">{credential.id}</p>
+                  <p className="text-xs text-gray-500 mt-1">
                     Verify at: https://yourjournal.org/credentials/{credential.id}
                   </p>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="border-t-2 border-blue-600 pt-4 text-xs text-gray-500">
+              <div className="border-t-2 border-blue-600 pt-3 text-xs text-gray-500">
                 <p>This digital credential is issued by {credential.organization}</p>
                 <p>Generated on {format(new Date(), 'MMMM dd, yyyy')}</p>
               </div>

@@ -26,14 +26,16 @@ export default function CredentialsTab({
 }: CredentialsTabProps) {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold mb-4">Create New Credential</h2>
+      <h2 className="text-xl font-semibold mb-4 text-center">Create New Credential</h2>
       
-      <div className="max-w-2xl">
-        <CredentialForm 
-          organizations={organizations}
-          roles={roles}
-          onCredentialGenerated={onCredentialGenerated}
-        />
+      <div className="flex justify-center">
+        <div className="w-full max-w-2xl">
+          <CredentialForm 
+            organizations={organizations}
+            roles={roles}
+            onCredentialGenerated={onCredentialGenerated}
+          />
+        </div>
       </div>
     </div>
   )

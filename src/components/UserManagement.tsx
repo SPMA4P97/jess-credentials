@@ -136,6 +136,9 @@ export default function UserManagement({
               setOrganizations={setOrganizations}
               roles={roles}
               setRoles={setRoles}
+              users={users}
+              setUsers={setUsers}
+              currentUser={currentUser}
             />
           )}
         </div>
