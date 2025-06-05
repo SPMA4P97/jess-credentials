@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus } from 'lucide-react'
 import UserTable from './UserTable'
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface User {
   id: string
@@ -23,28 +25,79 @@ interface UsersTabProps {
 
 export default function UsersTab({ users, setUsers, currentUser }: UsersTabProps) {
   const [showAddForm, setShowAddForm] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
   const [newUserForm, setNewUserForm] = useState({
     email: '',
     username: '',
     password: '',
     role: 'user' as 'admin' | 'user'
   })
+  const { toast } = useToast()
 
-  const addUser = () => {
-    if (newUserForm.email && newUserForm.username && newUserForm.password) {
-      const newUser: User = {
-        id: `user-${Date.now()}`,
-        email: newUserForm.email,
-        username: newUserForm.username,
-        password: newUserForm.password,
-        role: newUserForm.role,
-        createdAt: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0].slice(0, 5)
+  const addUser = async () => {
+    if (newUserForm.username && newUserForm.password) {
+      setIsAdding(true)
+      
+      try {
+        // Insert new user into Supabase
+        const { data, error } = await supabase
+          .from('users')
+          .insert([{
+            email: newUserForm.email || null,
+            username: newUserForm.username,
+            password: newUserForm.password,
+            role: newUserForm.role
+          }])
+          .select()
+
+        if (error) {
+          console.error('Error adding user to Supabase:', error)
+          toast({
+            title: "Error",
+            description: "Failed to add user to database",
+            variant: "destructive",
+          })
+          return
+        }
+
+        if (data && data[0]) {
+          // Add to local state for immediate UI update
+          const newUser: User = {
+            id: data[0].id,
+            email: data[0].email || '',
+            username: data[0].username,
+            password: data[0].password,
+            role: data[0].role,
+            createdAt: data[0].created || new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0].slice(0, 5)
+          }
+          
+          const updated = [...users, newUser]
+          setUsers(updated)
+          
+          toast({
+            title: "Success",
+            description: "User added successfully",
+          })
+          
+          setShowAddForm(false)
+          setNewUserForm({ email: '', username: '', password: '', role: 'user' })
+        }
+      } catch (error) {
+        console.error('Error adding user:', error)
+        toast({
+          title: "Error",
+          description: "Failed to add user",
+          variant: "destructive",
+        })
+      } finally {
+        setIsAdding(false)
       }
-      const updated = [...users, newUser]
-      setUsers(updated)
-      localStorage.setItem('jessUsers', JSON.stringify(updated))
-      setShowAddForm(false)
-      setNewUserForm({ email: '', username: '', password: '', role: 'user' })
+    } else {
+      toast({
+        title: "Validation Error",
+        description: "Username and password are required",
+        variant: "destructive",
+      })
     }
   }
 
@@ -63,24 +116,28 @@ export default function UsersTab({ users, setUsers, currentUser }: UsersTabProps
           <h3 className="font-semibold mb-4">Add New User</h3>
           <div className="grid grid-cols-2 gap-4">
             <Input
-              placeholder="Email"
+              placeholder="Email (optional)"
               value={newUserForm.email}
               onChange={(e) => setNewUserForm({...newUserForm, email: e.target.value})}
+              disabled={isAdding}
             />
             <Input
-              placeholder="Username"
+              placeholder="Username *"
               value={newUserForm.username}
               onChange={(e) => setNewUserForm({...newUserForm, username: e.target.value})}
+              disabled={isAdding}
             />
             <Input
-              placeholder="Password"
+              placeholder="Password *"
               type="password"
               value={newUserForm.password}
               onChange={(e) => setNewUserForm({...newUserForm, password: e.target.value})}
+              disabled={isAdding}
             />
             <Select 
               value={newUserForm.role} 
               onValueChange={(value: 'admin' | 'user') => setNewUserForm({...newUserForm, role: value})}
+              disabled={isAdding}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -92,8 +149,12 @@ export default function UsersTab({ users, setUsers, currentUser }: UsersTabProps
             </Select>
           </div>
           <div className="flex gap-2 mt-4">
-            <Button onClick={addUser}>Add User</Button>
-            <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
+            <Button onClick={addUser} disabled={isAdding}>
+              {isAdding ? "Adding..." : "Add User"}
+            </Button>
+            <Button variant="outline" onClick={() => setShowAddForm(false)} disabled={isAdding}>
+              Cancel
+            </Button>
           </div>
         </div>
       )}

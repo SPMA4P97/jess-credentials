@@ -34,7 +34,7 @@ export default function UserTable({ users, setUsers, currentUser }: UserTablePro
   const startEdit = (user: User) => {
     setEditingUser(user.id)
     setEditForm({
-      email: user.email,
+      email: user.email || '',
       username: user.username,
       password: user.password,
       role: user.role
@@ -93,6 +93,7 @@ export default function UserTable({ users, setUsers, currentUser }: UserTablePro
                   <>
                     <TableCell>
                       <Input
+                        placeholder="Email (optional)"
                         value={editForm.email}
                         onChange={(e) => setEditForm({...editForm, email: e.target.value})}
                       />
@@ -133,7 +134,7 @@ export default function UserTable({ users, setUsers, currentUser }: UserTablePro
                   </>
                 ) : (
                   <>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.email || <span className="text-gray-400 italic">No email</span>}</TableCell>
                     <TableCell>{user.username}</TableCell>
                     <TableCell>•••••••••</TableCell>
                     <TableCell>
