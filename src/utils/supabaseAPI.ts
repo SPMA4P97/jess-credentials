@@ -1,5 +1,6 @@
 
 const SUPABASE_URL = "https://fryjsygqdvcuaabjerag.supabase.co"
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeWpzeWdxZHZjdWFhYmplcmFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNTkwOTUsImV4cCI6MjA2NDczNTA5NX0.aZEVYE6IDjh_0LY9lETfAkHKx1d7xY0Sk2TLi-FUKds"
 
 export const createCredentialInSupabase = async (credentialData: {
   id: string
@@ -17,9 +18,9 @@ export const createCredentialInSupabase = async (credentialData: {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}`,
-        'Prefer': 'return=minimal'
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=representation'
       },
       body: JSON.stringify(credentialData)
     })
