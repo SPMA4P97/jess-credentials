@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { format } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
 import { Calendar } from 'lucide-react'
+import { createCredentialInSupabase } from '@/utils/supabaseAPI'
+import { useToast } from "@/hooks/use-toast"
 
 interface CredentialFormProps {
   organizations: string[]
@@ -26,6 +27,8 @@ export default function CredentialForm({ organizations, roles, onCredentialGener
   const [volumesInput, setVolumesInput] = useState("")
   const [hideVolumes, setHideVolumes] = useState(false)
   const [customYear, setCustomYear] = useState(new Date().getFullYear().toString())
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
 
   const handleSetYearDates = () => {
     const year = parseInt(customYear)
@@ -60,7 +63,8 @@ export default function CredentialForm({ organizations, roles, onCredentialGener
       })
   }
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    setIsSubmitting(true)
     const newId = uuidv4().split('-')[0]
     const volumes = parseVolumes(volumesInput)
     
@@ -75,6 +79,35 @@ export default function CredentialForm({ organizations, roles, onCredentialGener
       volumes: hideVolumes ? [] : volumes,
       hideVolumes
     }
+
+    // Prepare data for Supabase
+    const supabaseData = {
+      id: newId,
+      created_at: new Date().toISOString(),
+      organization_name: selectedOrganization,
+      role: role,
+      issue_date: date,
+      expiry_date: expiry || null,
+      volumes: hideVolumes ? '' : volumes.join(', '),
+      info: issue,
+      public_credential_url: `${window.location.origin}/credential/${newId}`
+    }
+
+    // Send to Supabase
+    const supabaseSuccess = await createCredentialInSupabase(supabaseData)
+    
+    if (supabaseSuccess) {
+      toast({
+        title: "Success",
+        description: "Credential saved to database successfully!",
+      })
+    } else {
+      toast({
+        title: "Warning",
+        description: "Credential created locally but failed to save to database.",
+        variant: "destructive"
+      })
+    }
     
     onCredentialGenerated(newCredential)
     
@@ -88,6 +121,7 @@ export default function CredentialForm({ organizations, roles, onCredentialGener
     setVolumesInput("")
     setHideVolumes(false)
     setCustomYear(new Date().getFullYear().toString())
+    setIsSubmitting(false)
   }
 
   return (
@@ -195,7 +229,9 @@ export default function CredentialForm({ organizations, roles, onCredentialGener
           <Textarea placeholder="Journal Issue or Description" value={issue} onChange={e => setIssue(e.target.value)} />
         </div>
 
-        <Button onClick={handleGenerate}>Generate Credential</Button>
+        <Button onClick={handleGenerate} disabled={isSubmitting}>
+          {isSubmitting ? 'Creating...' : 'Generate Credential'}
+        </Button>
       </CardContent>
     </Card>
   )

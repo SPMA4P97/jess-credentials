@@ -9,7 +9,87 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      credentials: {
+        Row: {
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          info: string | null
+          issue_date: string | null
+          name: string | null
+          organization_name: string | null
+          public_credential_url: string | null
+          role: string | null
+          user_id: string | null
+          volumes: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expiry_date?: string | null
+          id: string
+          info?: string | null
+          issue_date?: string | null
+          name?: string | null
+          organization_name?: string | null
+          public_credential_url?: string | null
+          role?: string | null
+          user_id?: string | null
+          volumes?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          info?: string | null
+          issue_date?: string | null
+          name?: string | null
+          organization_name?: string | null
+          public_credential_url?: string | null
+          role?: string | null
+          user_id?: string | null
+          volumes?: string | null
+        }
+        Relationships: []
+      }
+      Credentials: {
+        Row: {
+          created_at: string
+          "Expiry Date": string
+          id: number
+          Info: string | null
+          "Issue Date": string | null
+          Name: string | null
+          Organization: string | null
+          "Public Credential URL": string | null
+          Role: string | null
+          Volumes: string | null
+        }
+        Insert: {
+          created_at?: string
+          "Expiry Date": string
+          id?: number
+          Info?: string | null
+          "Issue Date"?: string | null
+          Name?: string | null
+          Organization?: string | null
+          "Public Credential URL"?: string | null
+          Role?: string | null
+          Volumes?: string | null
+        }
+        Update: {
+          created_at?: string
+          "Expiry Date"?: string
+          id?: number
+          Info?: string | null
+          "Issue Date"?: string | null
+          Name?: string | null
+          Organization?: string | null
+          "Public Credential URL"?: string | null
+          Role?: string | null
+          Volumes?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
