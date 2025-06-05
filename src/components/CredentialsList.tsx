@@ -4,22 +4,22 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import { Button } from "@/components/ui/button"
 import { FileText, ExternalLink } from 'lucide-react'
 
-interface Credential {
+interface SupabaseCredential {
   id: string
   name: string
   role: string
-  organization: string
-  date: string
-  issue: string
-  expiry: string
-  volumes?: string[]
-  hideVolumes?: boolean
+  organization_name: string
+  issue_date: string
+  info: string
+  expiry_date: string
+  volumes?: string
+  public_credential_url?: string
 }
 
 interface CredentialsListProps {
-  credentials: Credential[]
+  credentials: SupabaseCredential[]
   onDelete: (id: string) => void
-  onViewPDF: (credential: Credential) => void
+  onViewPDF: (credential: SupabaseCredential) => void
 }
 
 export default function CredentialsList({ credentials, onDelete, onViewPDF }: CredentialsListProps) {
@@ -27,7 +27,7 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
     return (
       <Card>
         <CardContent className="text-center py-8">
-          <p className="text-gray-500">No credentials generated yet.</p>
+          <p className="text-gray-500">No credentials found in database.</p>
         </CardContent>
       </Card>
     )
@@ -40,7 +40,7 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
   return (
     <Card>
       <CardContent className="space-y-4">
-        <h3 className="text-lg font-semibold">All Credentials</h3>
+        <h3 className="text-lg font-semibold">All Credentials from Database</h3>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -60,17 +60,17 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
             <TableBody>
               {credentials.map(c => (
                 <TableRow key={c.id}>
-                  <TableCell>{c.organization || '—'}</TableCell>
-                  <TableCell>{c.name}</TableCell>
-                  <TableCell>{c.role}</TableCell>
-                  <TableCell>{c.date}</TableCell>
-                  <TableCell>{c.expiry || '—'}</TableCell>
+                  <TableCell>{c.organization_name || '—'}</TableCell>
+                  <TableCell>{c.name || '—'}</TableCell>
+                  <TableCell>{c.role || '—'}</TableCell>
+                  <TableCell>{c.issue_date || '—'}</TableCell>
+                  <TableCell>{c.expiry_date || '—'}</TableCell>
                   <TableCell>
-                    {c.hideVolumes ? '—' : (c.volumes?.length ? c.volumes.join(', ') : '—')}
+                    {c.volumes ? c.volumes.split(', ').filter(Boolean).join(', ') : '—'}
                   </TableCell>
                   <TableCell>
-                    <div className="max-w-xs truncate" title={c.issue}>
-                      {c.issue || '—'}
+                    <div className="max-w-xs truncate" title={c.info || ''}>
+                      {c.info || '—'}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -84,20 +84,22 @@ export default function CredentialsList({ credentials, onDelete, onViewPDF }: Cr
                       View Public
                     </a>
                   </TableCell>
-                  <TableCell>{c.id}</TableCell>
+                  <TableCell className="font-mono text-xs">{c.id}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button 
-                        onClick={() => onViewPDF(c)} 
-                        variant="outline" 
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        <FileText size={14} />
-                        PDF
-                      </Button>
+                      {c.public_credential_url && (
+                        <Button 
+                          onClick={() => onViewPDF(c)} 
+                          variant="outline" 
+                          size="sm"
+                          className="flex items-center gap-1"
+                        >
+                          <FileText size={14} />
+                          PDF
+                        </Button>
+                      )}
                       <Button onClick={() => onDelete(c.id)} variant="destructive" size="sm">
-                        Remove
+                        Delete
                       </Button>
                     </div>
                   </TableCell>

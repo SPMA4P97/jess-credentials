@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { LogOut } from 'lucide-react'
@@ -54,7 +55,7 @@ export default function UserManagement({
     const saved = localStorage.getItem('jessCredentials')
     return saved ? JSON.parse(saved) : []
   })
-  const [pdfCredential, setPdfCredential] = useState<Credential | null>(null)
+  const [pdfCredential, setPdfCredential] = useState<any>(null)
   const [newCredential, setNewCredential] = useState<Credential | null>(null)
 
   const handleLogout = () => {
@@ -75,7 +76,7 @@ export default function UserManagement({
     localStorage.setItem('jessCredentials', JSON.stringify(updatedCredentials))
   }
 
-  const handleViewPDF = (credential: Credential) => {
+  const handleViewPDF = (credential: any) => {
     setPdfCredential(credential)
   }
 

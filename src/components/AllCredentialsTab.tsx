@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react'
 import { useToast } from "@/hooks/use-toast"
 import CredentialsList from './CredentialsList'
 import { fetchAllCredentialsFromSupabase, deleteCredentialFromSupabase } from '../utils/supabaseAPI'
 
-interface Credential {
+interface SupabaseCredential {
   id: string
   name: string
   role: string
@@ -20,29 +21,14 @@ interface AllCredentialsTabProps {
 }
 
 export default function AllCredentialsTab({ onViewPDF }: AllCredentialsTabProps) {
-  const [credentials, setCredentials] = useState<Credential[]>([])
+  const [credentials, setCredentials] = useState<SupabaseCredential[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
   const fetchCredentials = async () => {
     setLoading(true)
     const supabaseCredentials = await fetchAllCredentialsFromSupabase()
-    
-    // Transform Supabase data to match the expected format
-    const transformedCredentials = supabaseCredentials.map((cred: any) => ({
-      id: cred.id,
-      name: cred.name || '',
-      role: cred.role || '',
-      organization: cred.organization_name || '',
-      date: cred.issue_date || '',
-      issue: cred.info || '',
-      expiry: cred.expiry_date || '',
-      volumes: cred.volumes ? cred.volumes.split(', ').filter(Boolean) : [],
-      hideVolumes: !cred.volumes,
-      public_credential_url: cred.public_credential_url
-    }))
-    
-    setCredentials(transformedCredentials)
+    setCredentials(supabaseCredentials)
     setLoading(false)
   }
 
@@ -56,14 +42,6 @@ export default function AllCredentialsTab({ onViewPDF }: AllCredentialsTabProps)
     if (success) {
       // Remove from local state
       setCredentials(prev => prev.filter(c => c.id !== id))
-      
-      // Also remove from localStorage to keep in sync
-      const localCredentials = localStorage.getItem('jessCredentials')
-      if (localCredentials) {
-        const parsed = JSON.parse(localCredentials)
-        const updated = parsed.filter((c: any) => c.id !== id)
-        localStorage.setItem('jessCredentials', JSON.stringify(updated))
-      }
       
       toast({
         title: "Success",
